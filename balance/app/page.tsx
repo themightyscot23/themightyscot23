@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, X } from 'lucide-react';
 import { CashFlowCard } from '@/components/CashFlowCard';
 import { MonthSelector } from '@/components/MonthSelector';
 import { CategoryChart } from '@/components/CategoryChart';
 import { TransactionList } from '@/components/TransactionList';
 import { PlaidLinkButton } from '@/components/PlaidLinkButton';
-import { CashFlowSummary, CategorySpending, Transaction, AppCategory } from '@/lib/types';
+import { CashFlowSummary, CategorySpending, Transaction, AppCategory, Account } from '@/lib/types';
 import { getCurrentYearMonth } from '@/lib/utils';
 
 interface MonthlySummary {
@@ -22,9 +22,11 @@ export default function Dashboard() {
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
   const [transactions, setTransactions] = useState<(Transaction & { effective_category: AppCategory })[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [hasAccounts, setHasAccounts] = useState<boolean | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<AppCategory | null>(null);
 
   const fetchAvailableMonths = async () => {
     const res = await fetch('/api/transactions?available_months=true');
@@ -61,7 +63,9 @@ export default function Dashboard() {
   const checkAccounts = async () => {
     const res = await fetch('/api/plaid/accounts');
     const data = await res.json();
-    setHasAccounts(data.accounts && data.accounts.length > 0);
+    const accountsList = data.accounts || [];
+    setAccounts(accountsList);
+    setHasAccounts(accountsList.length > 0);
   };
 
   const handleSync = async () => {
@@ -91,6 +95,19 @@ export default function Dashboard() {
     await fetchAvailableMonths();
     await fetchMonthlyData();
   };
+
+  const handleCategoryClick = (category: AppCategory) => {
+    setCategoryFilter(category);
+  };
+
+  const clearCategoryFilter = () => {
+    setCategoryFilter(null);
+  };
+
+  // Filter transactions by selected category
+  const filteredTransactions = categoryFilter
+    ? transactions.filter((t) => t.effective_category === categoryFilter)
+    : transactions;
 
   useEffect(() => {
     checkAccounts();
@@ -170,17 +187,31 @@ export default function Dashboard() {
         <CategoryChart
           data={summary?.categoryBreakdown || []}
           loading={loading}
+          onCategoryClick={handleCategoryClick}
         />
 
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Transactions ({transactions.length})
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Transactions ({filteredTransactions.length})
+            </h3>
+            {categoryFilter && (
+              <button
+                onClick={clearCategoryFilter}
+                className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+              >
+                {categoryFilter}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
           <div className="max-h-[600px] overflow-y-auto">
             <TransactionList
-              transactions={transactions}
+              transactions={filteredTransactions}
               onCategoryChange={handleCategoryChange}
               loading={loading}
+              showAccount={true}
+              accounts={accounts}
             />
           </div>
         </div>
