@@ -188,38 +188,37 @@ export default function Dashboard() {
         loading={loading}
       />
 
-      {/* Charts and Recent Transactions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <CategoryChart
-          data={summary?.categoryBreakdown || []}
-          loading={loading}
-          onCategoryClick={handleCategoryClick}
-        />
+      {/* Income & Spending by Category - Full Width */}
+      <CategoryChart
+        data={summary?.categoryBreakdown || []}
+        loading={loading}
+        onCategoryClick={handleCategoryClick}
+      />
 
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Transactions ({filteredTransactions.length})
-            </h3>
-            {categoryFilter && (
-              <button
-                onClick={clearCategoryFilter}
-                className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
-              >
-                {categoryFilter}
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-          <div className="max-h-[600px] overflow-y-auto">
-            <TransactionList
-              transactions={filteredTransactions}
-              onCategoryChange={handleCategoryChange}
-              loading={loading}
-              showAccount={true}
-              accounts={accounts}
-            />
-          </div>
+      {/* Transactions - Full Width */}
+      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Transactions ({filteredTransactions.length})
+          </h3>
+          {categoryFilter && (
+            <button
+              onClick={clearCategoryFilter}
+              className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+            >
+              {categoryFilter}
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+        <div className="max-h-[600px] overflow-y-auto">
+          <TransactionList
+            transactions={filteredTransactions}
+            onCategoryChange={handleCategoryChange}
+            loading={loading}
+            showAccount={true}
+            accounts={accounts}
+          />
         </div>
       </div>
     </div>

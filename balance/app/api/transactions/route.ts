@@ -40,8 +40,9 @@ export async function GET(request: NextRequest) {
       let income = 0;
       let expenses = 0;
 
-      // Category spending map
-      const categoryMap = new Map<AppCategory, number>();
+      // Category maps for expenses (positive) and income (negative)
+      const expenseCategoryMap = new Map<AppCategory, number>();
+      const incomeCategoryMap = new Map<AppCategory, number>();
 
       for (const txn of allTransactions) {
         const effectiveCategory = getEffectiveCategory(txn.user_category, txn.plaid_category);
@@ -49,25 +50,41 @@ export async function GET(request: NextRequest) {
         // Plaid uses positive for expenses, negative for income
         if (txn.amount < 0) {
           income += Math.abs(txn.amount);
+          // Track income by category (stored as negative for chart display)
+          if (effectiveCategory !== 'Transfer') {
+            const current = incomeCategoryMap.get(effectiveCategory) || 0;
+            incomeCategoryMap.set(effectiveCategory, current + txn.amount); // Keep negative
+          }
         } else {
           expenses += txn.amount;
-
-          // Only count expenses in category breakdown
+          // Track expenses by category
           if (effectiveCategory !== 'Income' && effectiveCategory !== 'Transfer') {
-            const current = categoryMap.get(effectiveCategory) || 0;
-            categoryMap.set(effectiveCategory, current + txn.amount);
+            const current = expenseCategoryMap.get(effectiveCategory) || 0;
+            expenseCategoryMap.set(effectiveCategory, current + txn.amount);
           }
         }
       }
 
-      // Convert category map to sorted array
-      const categoryBreakdown: CategorySpending[] = Array.from(categoryMap.entries())
+      // Convert expense categories to array (positive amounts)
+      const expenseBreakdown: CategorySpending[] = Array.from(expenseCategoryMap.entries())
         .map(([category, amount]) => ({
           category,
           amount,
           percentage: expenses > 0 ? (amount / expenses) * 100 : 0,
         }))
         .sort((a, b) => b.amount - a.amount);
+
+      // Convert income categories to array (negative amounts for chart)
+      const incomeBreakdown: CategorySpending[] = Array.from(incomeCategoryMap.entries())
+        .map(([category, amount]) => ({
+          category,
+          amount, // Already negative
+          percentage: income > 0 ? (Math.abs(amount) / income) * 100 : 0,
+        }))
+        .sort((a, b) => a.amount - b.amount); // Sort by most negative first
+
+      // Combine: income (negative) first, then expenses (positive)
+      const categoryBreakdown: CategorySpending[] = [...incomeBreakdown, ...expenseBreakdown];
 
       const cashFlow: CashFlowSummary = {
         income,

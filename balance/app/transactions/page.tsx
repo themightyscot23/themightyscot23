@@ -10,7 +10,7 @@ import { APP_CATEGORIES } from '@/lib/categories';
 type TransactionType = 'all' | 'income' | 'expense';
 
 export default function TransactionsPage() {
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentYearMonth());
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([getCurrentYearMonth()]);
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [transactions, setTransactions] = useState<(Transaction & { effective_category: AppCategory })[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -25,8 +25,9 @@ export default function TransactionsPage() {
     const data = await res.json();
     if (data.months && data.months.length > 0) {
       setAvailableMonths(data.months);
-      if (!data.months.includes(selectedMonth)) {
-        setSelectedMonth(data.months[0]);
+      const hasValidSelection = selectedMonths.some((m) => data.months.includes(m));
+      if (!hasValidSelection) {
+        setSelectedMonths([data.months[0]]);
       }
     }
   };
@@ -40,7 +41,8 @@ export default function TransactionsPage() {
   const fetchTransactions = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/transactions?month=${selectedMonth}`);
+      const monthsParam = selectedMonths.join(',');
+      const res = await fetch(`/api/transactions?months=${monthsParam}`);
       const data = await res.json();
       setTransactions(data.transactions || []);
     } catch (error) {
@@ -48,7 +50,7 @@ export default function TransactionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth]);
+  }, [selectedMonths]);
 
   const handleCategoryChange = async (id: string, category: AppCategory) => {
     await fetch('/api/transactions', {
@@ -66,7 +68,7 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     fetchTransactions();
-  }, [selectedMonth, fetchTransactions]);
+  }, [selectedMonths, fetchTransactions]);
 
   // Apply all filters
   const filteredTransactions = transactions.filter((t) => {
@@ -124,9 +126,9 @@ export default function TransactionsPage() {
         </div>
 
         <MonthSelector
-          selectedMonth={selectedMonth}
+          selectedMonths={selectedMonths}
           availableMonths={availableMonths}
-          onChange={setSelectedMonth}
+          onChange={setSelectedMonths}
         />
       </div>
 
