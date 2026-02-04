@@ -21,95 +21,193 @@ export const APP_CATEGORIES: AppCategory[] = [
   'Other',
 ];
 
-// Mapping from Plaid categories to app categories
-const PLAID_CATEGORY_MAP: Record<string, AppCategory> = {
-  // Income
-  'Income': 'Income',
-  'Transfer > Payroll': 'Income',
-  'Transfer > Deposit': 'Income',
+// Mapping from Plaid primary categories to app categories
+const PRIMARY_CATEGORY_MAP: Record<string, AppCategory> = {
+  // Direct mappings (case-insensitive matching applied below)
+  'income': 'Income',
+  'transfer': 'Transfer',
+  'bank fees': 'Fees & Charges',
+  'interest': 'Income', // Default for interest
+  'tax': 'Bills & Utilities',
+  'payment': 'Bills & Utilities',
+  'food and drink': 'Dining Out',
+  'shops': 'Shopping',
+  'transportation': 'Transportation',
+  'travel': 'Travel',
+  'recreation': 'Entertainment',
+  'entertainment': 'Entertainment',
+  'service': 'Other',
+  'healthcare': 'Health',
+  'medical': 'Health',
+  'community': 'Other',
+  'government': 'Bills & Utilities',
+  'utilities': 'Bills & Utilities',
+  'rent': 'Housing',
+  'mortgage': 'Housing',
+  'loan': 'Bills & Utilities',
+  'education': 'Education',
+  'charitable giving': 'Gifts & Donations',
+  'gifts': 'Gifts & Donations',
+  'personal': 'Personal Care',
+};
 
-  // Bank Fees
-  'Bank Fees': 'Fees & Charges',
-  'Bank Fees > ATM': 'Fees & Charges',
-  'Bank Fees > Overdraft': 'Fees & Charges',
-  'Interest > Interest Charged': 'Fees & Charges',
-
-  // Food
-  'Food and Drink': 'Dining Out',
-  'Food and Drink > Restaurants': 'Dining Out',
-  'Food and Drink > Restaurants > Fast Food': 'Dining Out',
-  'Food and Drink > Restaurants > Coffee Shop': 'Dining Out',
-  'Food and Drink > Groceries': 'Groceries',
-  'Food and Drink > Bar': 'Dining Out',
-
-  // Shops
-  'Shops': 'Shopping',
-  'Shops > Supermarkets and Groceries': 'Groceries',
-  'Shops > Clothing and Accessories': 'Shopping',
-  'Shops > Electronics': 'Shopping',
-  'Shops > Department Stores': 'Shopping',
-  'Shops > Sporting Goods': 'Shopping',
-  'Shops > Books and News': 'Shopping',
-  'Shops > Pets': 'Shopping',
-
-  // Transportation
-  'Transportation': 'Transportation',
-  'Transportation > Gas Stations': 'Transportation',
-  'Transportation > Parking': 'Transportation',
-  'Transportation > Public Transit': 'Transportation',
-  'Transportation > Taxi': 'Transportation',
-  'Transportation > Ride Share': 'Transportation',
-
-  // Travel
-  'Travel': 'Travel',
-  'Travel > Airlines and Aviation Services': 'Travel',
-  'Travel > Lodging': 'Travel',
-  'Travel > Car Rental': 'Travel',
-
-  // Recreation & Entertainment
-  'Recreation': 'Entertainment',
-  'Recreation > Gyms and Fitness Centers': 'Health',
-  'Recreation > Arts and Entertainment': 'Entertainment',
-  'Entertainment': 'Entertainment',
-
-  // Services
-  'Service': 'Other',
-  'Service > Subscription': 'Subscriptions',
-  'Service > Streaming Services': 'Subscriptions',
-  'Service > Personal Care': 'Personal Care',
-  'Service > Financial': 'Other',
-
-  // Healthcare
-  'Healthcare': 'Health',
-  'Healthcare > Medical Services': 'Health',
-  'Healthcare > Pharmacies': 'Health',
+// More specific keyword-based mappings (checked against full category string)
+const KEYWORD_MAPPINGS: [string, AppCategory][] = [
+  // Income keywords
+  ['payroll', 'Income'],
+  ['salary', 'Income'],
+  ['wages', 'Income'],
+  ['direct deposit', 'Income'],
+  ['deposit', 'Income'],
+  ['refund', 'Income'],
+  ['interest earned', 'Income'],
+  ['dividend', 'Income'],
+  ['cashback', 'Income'],
+  ['cash back', 'Income'],
 
   // Housing
-  'Payment': 'Bills & Utilities',
-  'Payment > Rent': 'Housing',
-  'Payment > Insurance': 'Bills & Utilities',
-  'Utilities': 'Bills & Utilities',
+  ['rent', 'Housing'],
+  ['mortgage', 'Housing'],
+  ['real estate', 'Housing'],
+  ['property', 'Housing'],
+  ['hoa', 'Housing'],
+  ['homeowners', 'Housing'],
 
-  // Transfer
-  'Transfer': 'Transfer',
-  'Transfer > Internal Account Transfer': 'Transfer',
-  'Transfer > Wire': 'Transfer',
-  'Transfer > Credit': 'Transfer',
-  'Transfer > Debit': 'Transfer',
+  // Groceries (before general food)
+  ['grocery', 'Groceries'],
+  ['groceries', 'Groceries'],
+  ['supermarket', 'Groceries'],
+  ['costco', 'Groceries'],
+  ['walmart', 'Groceries'],
+  ['target', 'Groceries'],
+  ['whole foods', 'Groceries'],
+  ['trader joe', 'Groceries'],
+  ['safeway', 'Groceries'],
+  ['kroger', 'Groceries'],
+  ['aldi', 'Groceries'],
+  ['publix', 'Groceries'],
 
-  // Tax
-  'Tax': 'Bills & Utilities',
+  // Dining
+  ['restaurant', 'Dining Out'],
+  ['fast food', 'Dining Out'],
+  ['coffee', 'Dining Out'],
+  ['cafe', 'Dining Out'],
+  ['bar', 'Dining Out'],
+  ['food and drink', 'Dining Out'],
 
-  // Interest earned
-  'Interest > Interest Earned': 'Income',
+  // Transportation
+  ['gas', 'Transportation'],
+  ['fuel', 'Transportation'],
+  ['parking', 'Transportation'],
+  ['uber', 'Transportation'],
+  ['lyft', 'Transportation'],
+  ['taxi', 'Transportation'],
+  ['ride share', 'Transportation'],
+  ['rideshare', 'Transportation'],
+  ['transit', 'Transportation'],
+  ['subway', 'Transportation'],
+  ['metro', 'Transportation'],
+  ['car wash', 'Transportation'],
+  ['auto', 'Transportation'],
 
-  // Community & Education
-  'Community': 'Other',
-  'Education': 'Education',
+  // Travel
+  ['airline', 'Travel'],
+  ['flight', 'Travel'],
+  ['hotel', 'Travel'],
+  ['lodging', 'Travel'],
+  ['airbnb', 'Travel'],
+  ['vrbo', 'Travel'],
+  ['car rental', 'Travel'],
+  ['cruise', 'Travel'],
+
+  // Entertainment
+  ['movie', 'Entertainment'],
+  ['theatre', 'Entertainment'],
+  ['theater', 'Entertainment'],
+  ['concert', 'Entertainment'],
+  ['sports', 'Entertainment'],
+  ['stadium', 'Entertainment'],
+  ['museum', 'Entertainment'],
+  ['amusement', 'Entertainment'],
+  ['game', 'Entertainment'],
+  ['gaming', 'Entertainment'],
+  ['arcade', 'Entertainment'],
+
+  // Subscriptions
+  ['subscription', 'Subscriptions'],
+  ['streaming', 'Subscriptions'],
+  ['netflix', 'Subscriptions'],
+  ['spotify', 'Subscriptions'],
+  ['hulu', 'Subscriptions'],
+  ['disney', 'Subscriptions'],
+  ['amazon prime', 'Subscriptions'],
+  ['apple music', 'Subscriptions'],
+  ['youtube', 'Subscriptions'],
+  ['hbo', 'Subscriptions'],
+
+  // Health
+  ['pharmacy', 'Health'],
+  ['doctor', 'Health'],
+  ['hospital', 'Health'],
+  ['medical', 'Health'],
+  ['dental', 'Health'],
+  ['vision', 'Health'],
+  ['gym', 'Health'],
+  ['fitness', 'Health'],
+  ['health', 'Health'],
+
+  // Personal Care
+  ['salon', 'Personal Care'],
+  ['barber', 'Personal Care'],
+  ['spa', 'Personal Care'],
+  ['beauty', 'Personal Care'],
+  ['cosmetic', 'Personal Care'],
+  ['haircut', 'Personal Care'],
+
+  // Bills & Utilities
+  ['utility', 'Bills & Utilities'],
+  ['utilities', 'Bills & Utilities'],
+  ['electric', 'Bills & Utilities'],
+  ['water', 'Bills & Utilities'],
+  ['gas bill', 'Bills & Utilities'],
+  ['internet', 'Bills & Utilities'],
+  ['phone', 'Bills & Utilities'],
+  ['cell', 'Bills & Utilities'],
+  ['mobile', 'Bills & Utilities'],
+  ['cable', 'Bills & Utilities'],
+  ['insurance', 'Bills & Utilities'],
+
+  // Fees
+  ['fee', 'Fees & Charges'],
+  ['atm', 'Fees & Charges'],
+  ['overdraft', 'Fees & Charges'],
+  ['late charge', 'Fees & Charges'],
+  ['service charge', 'Fees & Charges'],
+  ['interest charged', 'Fees & Charges'],
+
+  // Transfer (lower priority)
+  ['transfer', 'Transfer'],
+  ['wire', 'Transfer'],
+  ['venmo', 'Transfer'],
+  ['zelle', 'Transfer'],
+  ['paypal', 'Transfer'],
+  ['cash app', 'Transfer'],
+
+  // Education
+  ['tuition', 'Education'],
+  ['school', 'Education'],
+  ['college', 'Education'],
+  ['university', 'Education'],
+  ['student', 'Education'],
+  ['course', 'Education'],
+  ['book', 'Education'],
 
   // Gifts
-  'Gifts and Donations': 'Gifts & Donations',
-};
+  ['gift', 'Gifts & Donations'],
+  ['donation', 'Gifts & Donations'],
+  ['charity', 'Gifts & Donations'],
+  ['nonprofit', 'Gifts & Donations'],
+];
 
 /**
  * Maps Plaid category array to a single app category
@@ -128,18 +226,27 @@ export function mapPlaidCategory(plaidCategories: string | null): AppCategory {
       return 'Other';
     }
 
-    // Try to match the most specific category path first (e.g., "Food and Drink > Groceries")
-    for (let i = categories.length; i > 0; i--) {
-      const categoryPath = categories.slice(0, i).join(' > ');
-      if (PLAID_CATEGORY_MAP[categoryPath]) {
-        return PLAID_CATEGORY_MAP[categoryPath];
+    // Create a full string for keyword matching
+    const fullCategoryString = categories.join(' ').toLowerCase();
+
+    // First, try keyword matching (more specific)
+    for (const [keyword, appCategory] of KEYWORD_MAPPINGS) {
+      if (fullCategoryString.includes(keyword.toLowerCase())) {
+        return appCategory;
       }
     }
 
-    // Fall back to primary category
-    const primaryCategory = categories[0];
-    if (PLAID_CATEGORY_MAP[primaryCategory]) {
-      return PLAID_CATEGORY_MAP[primaryCategory];
+    // Then try primary category mapping
+    const primaryCategory = categories[0].toLowerCase();
+    if (PRIMARY_CATEGORY_MAP[primaryCategory]) {
+      return PRIMARY_CATEGORY_MAP[primaryCategory];
+    }
+
+    // Try partial match on primary category
+    for (const [key, value] of Object.entries(PRIMARY_CATEGORY_MAP)) {
+      if (primaryCategory.includes(key) || key.includes(primaryCategory)) {
+        return value;
+      }
     }
 
     return 'Other';
