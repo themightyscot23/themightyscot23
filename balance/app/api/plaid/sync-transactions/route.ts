@@ -45,6 +45,27 @@ export async function POST(request: NextRequest) {
 
         // Process added transactions
         for (const txn of added) {
+          // Use personal_finance_category (new) or fall back to category (deprecated)
+          const categoryData = txn.personal_finance_category
+            ? JSON.stringify({
+                primary: txn.personal_finance_category.primary,
+                detailed: txn.personal_finance_category.detailed,
+              })
+            : txn.category
+            ? JSON.stringify(txn.category)
+            : null;
+
+          // Log first few transactions for debugging
+          if (totalAdded < 5) {
+            console.log('Transaction category data:', {
+              name: txn.name,
+              merchant: txn.merchant_name,
+              personal_finance_category: txn.personal_finance_category,
+              legacy_category: txn.category,
+              stored_as: categoryData,
+            });
+          }
+
           upsertTransaction({
             id: txn.transaction_id,
             account_id: txn.account_id,
@@ -52,7 +73,7 @@ export async function POST(request: NextRequest) {
             merchant_name: txn.merchant_name || null,
             name: txn.name,
             amount: txn.amount,
-            plaid_category: txn.category ? JSON.stringify(txn.category) : null,
+            plaid_category: categoryData,
             user_category: null,
             pending: txn.pending,
           });
@@ -61,6 +82,15 @@ export async function POST(request: NextRequest) {
 
         // Process modified transactions
         for (const txn of modified) {
+          const categoryData = txn.personal_finance_category
+            ? JSON.stringify({
+                primary: txn.personal_finance_category.primary,
+                detailed: txn.personal_finance_category.detailed,
+              })
+            : txn.category
+            ? JSON.stringify(txn.category)
+            : null;
+
           upsertTransaction({
             id: txn.transaction_id,
             account_id: txn.account_id,
@@ -68,7 +98,7 @@ export async function POST(request: NextRequest) {
             merchant_name: txn.merchant_name || null,
             name: txn.name,
             amount: txn.amount,
-            plaid_category: txn.category ? JSON.stringify(txn.category) : null,
+            plaid_category: categoryData,
             user_category: null,
             pending: txn.pending,
           });
