@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getPlaidClient } from '@/lib/plaid';
-import { createPlaidItem, createAccount } from '@/lib/db';
+import { createPlaidItem, createAccount, getUserFromSession } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
+    // Get current user from session
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = getUserFromSession(sessionToken);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
     const plaidClient = getPlaidClient();
     const { public_token, metadata } = await request.json();
 
@@ -25,9 +39,10 @@ export async function POST(request: NextRequest) {
     const institutionId = metadata?.institution?.institution_id || null;
     const institutionName = metadata?.institution?.name || null;
 
-    // Store the Plaid item
+    // Store the Plaid item linked to current user
     createPlaidItem({
       id: item_id,
+      user_id: user.id,
       access_token,
       institution_id: institutionId,
       institution_name: institutionName,

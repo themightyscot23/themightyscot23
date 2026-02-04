@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllAccounts, deletePlaidItem, getAllPlaidItems } from '@/lib/db';
+import { cookies } from 'next/headers';
+import { getAllAccounts, deletePlaidItem, getAllPlaidItems, getUserFromSession } from '@/lib/db';
 
 export async function GET() {
   try {
-    const accounts = getAllAccounts();
-    const items = getAllPlaidItems();
+    // Get current user from session
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = getUserFromSession(sessionToken);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
+    // Get only accounts belonging to current user
+    const accounts = getAllAccounts(user.id);
+    const items = getAllPlaidItems(user.id);
 
     return NextResponse.json({
       accounts,
@@ -21,6 +36,19 @@ export async function GET() {
 
 export async function DELETE(request: NextRequest) {
   try {
+    // Get current user from session
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = getUserFromSession(sessionToken);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get('item_id');
 
@@ -32,7 +60,8 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete the Plaid item (cascades to accounts and transactions via FK)
-    deletePlaidItem(itemId);
+    // Only delete if it belongs to the current user
+    deletePlaidItem(itemId, user.id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getPlaidClient } from '@/lib/plaid';
 import {
   getAllPlaidItems,
@@ -9,17 +10,38 @@ import {
   deleteTransaction,
   findMatchingCategoryRule,
   updateTransactionCategory,
+  getUserFromSession,
 } from '@/lib/db';
 import { RemovedTransaction, Transaction } from 'plaid';
 
 export async function POST(request: NextRequest) {
   try {
+    // Get current user from session
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = getUserFromSession(sessionToken);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
     const plaidClient = getPlaidClient();
     const body = await request.json().catch(() => ({}));
     const itemId = body.item_id;
 
-    // If item_id provided, sync that item. Otherwise sync all items.
-    const items = itemId ? [getPlaidItem(itemId)].filter(Boolean) : getAllPlaidItems();
+    // If item_id provided, sync that item (if it belongs to user). Otherwise sync all user's items.
+    let items;
+    if (itemId) {
+      const item = getPlaidItem(itemId);
+      // Verify item belongs to current user
+      items = item && item.user_id === user.id ? [item] : [];
+    } else {
+      items = getAllPlaidItems(user.id);
+    }
 
     if (items.length === 0) {
       return NextResponse.json({ error: 'No connected accounts' }, { status: 400 });

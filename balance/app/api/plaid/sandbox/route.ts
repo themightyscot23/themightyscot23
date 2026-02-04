@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { getPlaidClient } from '@/lib/plaid';
 import {
   getAllPlaidItems,
   getDb,
+  getUserFromSession,
 } from '@/lib/db';
 
 /**
@@ -14,8 +16,21 @@ import {
 
 export async function GET() {
   try {
+    // Get current user from session
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = getUserFromSession(sessionToken);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
     const db = getDb();
-    const items = getAllPlaidItems();
+    const items = getAllPlaidItems(user.id);
 
     // Get sync state for all items
     const syncStates = db
@@ -61,11 +76,24 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Get current user from session
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = getUserFromSession(sessionToken);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { action, item_id } = body;
 
     const plaidClient = getPlaidClient();
-    const items = getAllPlaidItems();
+    const items = getAllPlaidItems(user.id);
 
     if (items.length === 0) {
       return NextResponse.json({ error: 'No connected accounts' }, { status: 400 });

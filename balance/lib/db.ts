@@ -43,32 +43,41 @@ function initializeSchema(): void {
 
 // ============ Plaid Items ============
 
-export function createPlaidItem(item: Omit<PlaidItem, 'created_at'>): PlaidItem {
+export function createPlaidItem(item: Omit<PlaidItem, 'created_at'> & { user_id: string }): PlaidItem & { user_id: string } {
   const db = getDb();
   const stmt = db.prepare(`
-    INSERT INTO plaid_items (id, access_token, institution_id, institution_name)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO plaid_items (id, user_id, access_token, institution_id, institution_name)
+    VALUES (?, ?, ?, ?, ?)
   `);
-  stmt.run(item.id, item.access_token, item.institution_id, item.institution_name);
+  stmt.run(item.id, item.user_id, item.access_token, item.institution_id, item.institution_name);
   return getPlaidItem(item.id)!;
 }
 
-export function getPlaidItem(id: string): PlaidItem | null {
+export function getPlaidItem(id: string): (PlaidItem & { user_id: string }) | null {
   const db = getDb();
   const stmt = db.prepare('SELECT * FROM plaid_items WHERE id = ?');
-  return stmt.get(id) as PlaidItem | null;
+  return stmt.get(id) as (PlaidItem & { user_id: string }) | null;
 }
 
-export function getAllPlaidItems(): PlaidItem[] {
+export function getAllPlaidItems(userId?: string): (PlaidItem & { user_id: string })[] {
   const db = getDb();
+  if (userId) {
+    const stmt = db.prepare('SELECT * FROM plaid_items WHERE user_id = ? ORDER BY created_at DESC');
+    return stmt.all(userId) as (PlaidItem & { user_id: string })[];
+  }
   const stmt = db.prepare('SELECT * FROM plaid_items ORDER BY created_at DESC');
-  return stmt.all() as PlaidItem[];
+  return stmt.all() as (PlaidItem & { user_id: string })[];
 }
 
-export function deletePlaidItem(id: string): void {
+export function deletePlaidItem(id: string, userId?: string): void {
   const db = getDb();
-  const stmt = db.prepare('DELETE FROM plaid_items WHERE id = ?');
-  stmt.run(id);
+  if (userId) {
+    const stmt = db.prepare('DELETE FROM plaid_items WHERE id = ? AND user_id = ?');
+    stmt.run(id, userId);
+  } else {
+    const stmt = db.prepare('DELETE FROM plaid_items WHERE id = ?');
+    stmt.run(id);
+  }
 }
 
 // ============ Accounts ============
@@ -103,8 +112,18 @@ export function getAccountsByPlaidItem(plaidItemId: string): Account[] {
   return stmt.all(plaidItemId) as Account[];
 }
 
-export function getAllAccounts(): Account[] {
+export function getAllAccounts(userId?: string): (Account & { institution_name: string })[] {
   const db = getDb();
+  if (userId) {
+    const stmt = db.prepare(`
+      SELECT a.*, p.institution_name
+      FROM accounts a
+      JOIN plaid_items p ON a.plaid_item_id = p.id
+      WHERE p.user_id = ?
+      ORDER BY p.institution_name, a.name
+    `);
+    return stmt.all(userId) as (Account & { institution_name: string })[];
+  }
   const stmt = db.prepare(`
     SELECT a.*, p.institution_name
     FROM accounts a
@@ -214,8 +233,19 @@ export function getTransactions(options: {
   return rows.map((row) => ({ ...row, pending: Boolean(row.pending) }));
 }
 
-export function getTransactionsByMonth(yearMonth: string): Transaction[] {
+export function getTransactionsByMonth(yearMonth: string, userId?: string): Transaction[] {
   const db = getDb();
+  if (userId) {
+    const stmt = db.prepare(`
+      SELECT t.* FROM transactions t
+      JOIN accounts a ON t.account_id = a.id
+      JOIN plaid_items p ON a.plaid_item_id = p.id
+      WHERE strftime('%Y-%m', t.date) = ? AND p.user_id = ?
+      ORDER BY t.date DESC, t.created_at DESC
+    `);
+    const rows = stmt.all(yearMonth, userId) as Transaction[];
+    return rows.map((row) => ({ ...row, pending: Boolean(row.pending) }));
+  }
   const stmt = db.prepare(`
     SELECT * FROM transactions
     WHERE strftime('%Y-%m', date) = ?
@@ -225,14 +255,44 @@ export function getTransactionsByMonth(yearMonth: string): Transaction[] {
   return rows.map((row) => ({ ...row, pending: Boolean(row.pending) }));
 }
 
-export function getAvailableMonths(): string[] {
+export function getAvailableMonths(userId?: string): string[] {
   const db = getDb();
+  if (userId) {
+    const stmt = db.prepare(`
+      SELECT DISTINCT strftime('%Y-%m', t.date) as month
+      FROM transactions t
+      JOIN accounts a ON t.account_id = a.id
+      JOIN plaid_items p ON a.plaid_item_id = p.id
+      WHERE p.user_id = ?
+      ORDER BY month DESC
+    `);
+    return (stmt.all(userId) as { month: string }[]).map((row) => row.month);
+  }
   const stmt = db.prepare(`
     SELECT DISTINCT strftime('%Y-%m', date) as month
     FROM transactions
     ORDER BY month DESC
   `);
-  return stmt.all().map((row: { month: string }) => row.month);
+  return (stmt.all() as { month: string }[]).map((row) => row.month);
+}
+
+// ============ Users & Sessions ============
+
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
+export function getUserFromSession(sessionToken: string): User | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT u.id, u.email, u.name
+    FROM sessions s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.token = ? AND s.expires_at > datetime('now')
+  `).get(sessionToken) as User | undefined;
+  return result || null;
 }
 
 // ============ Sync State ============

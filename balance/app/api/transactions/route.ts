@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import {
   getTransactions,
   getTransactionsByMonth,
@@ -7,12 +8,26 @@ import {
   getTransaction,
   createOrUpdateCategoryRule,
   applyCategoriesToMatchingTransactions,
+  getUserFromSession,
 } from '@/lib/db';
 import { getEffectiveCategory } from '@/lib/categories';
 import { AppCategory, CashFlowSummary, CategorySpending } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
+    // Get current user from session
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = getUserFromSession(sessionToken);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
 
     const month = searchParams.get('month');
@@ -31,10 +46,10 @@ export async function GET(request: NextRequest) {
 
     // If summary requested, return aggregated data for all selected months
     if (summary === 'true' && monthsList.length > 0) {
-      // Collect transactions from all selected months
+      // Collect transactions from all selected months (filtered by user)
       let allTransactions: ReturnType<typeof getTransactionsByMonth> = [];
       for (const m of monthsList) {
-        const monthTxns = getTransactionsByMonth(m);
+        const monthTxns = getTransactionsByMonth(m, user.id);
         allTransactions = allTransactions.concat(monthTxns);
       }
 
@@ -102,9 +117,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Get list of available months
+    // Get list of available months (filtered by user)
     if (searchParams.get('available_months') === 'true') {
-      const availableMonths = getAvailableMonths();
+      const availableMonths = getAvailableMonths(user.id);
       return NextResponse.json({ months: availableMonths });
     }
 
@@ -112,9 +127,9 @@ export async function GET(request: NextRequest) {
     let transactions: ReturnType<typeof getTransactions> = [];
 
     if (monthsList.length > 0) {
-      // Get transactions from all selected months
+      // Get transactions from all selected months (filtered by user)
       for (const m of monthsList) {
-        const monthTxns = getTransactionsByMonth(m);
+        const monthTxns = getTransactionsByMonth(m, user.id);
         transactions = transactions.concat(monthTxns);
       }
       // Sort by date descending
@@ -149,6 +164,19 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Get current user from session
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
+
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const user = getUserFromSession(sessionToken);
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid session' }, { status: 401 });
+    }
+
     const { id, user_category, merchant_name, create_rule = true } = await request.json();
 
     if (!id || !user_category) {
