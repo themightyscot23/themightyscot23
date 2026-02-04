@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const month = searchParams.get('month');
+    const months = searchParams.get('months'); // comma-separated list of months
     const startDate = searchParams.get('start_date');
     const endDate = searchParams.get('end_date');
     const accountId = searchParams.get('account_id');
@@ -23,9 +24,17 @@ export async function GET(request: NextRequest) {
     const offset = searchParams.get('offset');
     const summary = searchParams.get('summary');
 
-    // If summary requested for a month, return aggregated data
-    if (summary === 'true' && month) {
-      const transactions = getTransactionsByMonth(month);
+    // Parse months list
+    const monthsList = months ? months.split(',').filter(Boolean) : month ? [month] : [];
+
+    // If summary requested, return aggregated data for all selected months
+    if (summary === 'true' && monthsList.length > 0) {
+      // Collect transactions from all selected months
+      let allTransactions: ReturnType<typeof getTransactionsByMonth> = [];
+      for (const m of monthsList) {
+        const monthTxns = getTransactionsByMonth(m);
+        allTransactions = allTransactions.concat(monthTxns);
+      }
 
       // Calculate cash flow
       let income = 0;
@@ -34,7 +43,7 @@ export async function GET(request: NextRequest) {
       // Category spending map
       const categoryMap = new Map<AppCategory, number>();
 
-      for (const txn of transactions) {
+      for (const txn of allTransactions) {
         const effectiveCategory = getEffectiveCategory(txn.user_category, txn.plaid_category);
 
         // Plaid uses positive for expenses, negative for income
@@ -67,24 +76,30 @@ export async function GET(request: NextRequest) {
       };
 
       return NextResponse.json({
-        month,
+        months: monthsList,
         cashFlow,
         categoryBreakdown,
-        transactionCount: transactions.length,
+        transactionCount: allTransactions.length,
       });
     }
 
     // Get list of available months
     if (searchParams.get('available_months') === 'true') {
-      const months = getAvailableMonths();
-      return NextResponse.json({ months });
+      const availableMonths = getAvailableMonths();
+      return NextResponse.json({ months: availableMonths });
     }
 
     // Otherwise return filtered transactions
-    let transactions;
+    let transactions: ReturnType<typeof getTransactions> = [];
 
-    if (month) {
-      transactions = getTransactionsByMonth(month);
+    if (monthsList.length > 0) {
+      // Get transactions from all selected months
+      for (const m of monthsList) {
+        const monthTxns = getTransactionsByMonth(m);
+        transactions = transactions.concat(monthTxns);
+      }
+      // Sort by date descending
+      transactions.sort((a, b) => b.date.localeCompare(a.date));
     } else {
       transactions = getTransactions({
         startDate: startDate || undefined,

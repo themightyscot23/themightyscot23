@@ -11,14 +11,14 @@ import { CashFlowSummary, CategorySpending, Transaction, AppCategory, Account } 
 import { getCurrentYearMonth } from '@/lib/utils';
 
 interface MonthlySummary {
-  month: string;
+  months: string[];
   cashFlow: CashFlowSummary;
   categoryBreakdown: CategorySpending[];
   transactionCount: number;
 }
 
 export default function Dashboard() {
-  const [selectedMonth, setSelectedMonth] = useState(getCurrentYearMonth());
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([getCurrentYearMonth()]);
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
   const [transactions, setTransactions] = useState<(Transaction & { effective_category: AppCategory })[]>([]);
@@ -33,9 +33,10 @@ export default function Dashboard() {
     const data = await res.json();
     if (data.months && data.months.length > 0) {
       setAvailableMonths(data.months);
-      // Select most recent month if current month has no data
-      if (!data.months.includes(selectedMonth)) {
-        setSelectedMonth(data.months[0]);
+      // Select most recent month if current selection has no data
+      const hasValidSelection = selectedMonths.some((m) => data.months.includes(m));
+      if (!hasValidSelection) {
+        setSelectedMonths([data.months[0]]);
       }
     }
   };
@@ -43,9 +44,10 @@ export default function Dashboard() {
   const fetchMonthlyData = useCallback(async () => {
     setLoading(true);
     try {
+      const monthsParam = selectedMonths.join(',');
       const [summaryRes, transactionsRes] = await Promise.all([
-        fetch(`/api/transactions?month=${selectedMonth}&summary=true`),
-        fetch(`/api/transactions?month=${selectedMonth}`),
+        fetch(`/api/transactions?months=${monthsParam}&summary=true`),
+        fetch(`/api/transactions?months=${monthsParam}`),
       ]);
 
       const summaryData = await summaryRes.json();
@@ -58,7 +60,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [selectedMonth]);
+  }, [selectedMonths]);
 
   const checkAccounts = async () => {
     const res = await fetch('/api/plaid/accounts');
@@ -118,7 +120,7 @@ export default function Dashboard() {
     if (hasAccounts) {
       fetchMonthlyData();
     }
-  }, [selectedMonth, hasAccounts, fetchMonthlyData]);
+  }, [selectedMonths, hasAccounts, fetchMonthlyData]);
 
   // Show connect prompt if no accounts
   if (hasAccounts === false) {
@@ -156,14 +158,18 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Your monthly financial overview</p>
+          <p className="text-gray-600">
+            {selectedMonths.length === 1
+              ? 'Your monthly financial overview'
+              : `Financial overview for ${selectedMonths.length} months`}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
           <MonthSelector
-            selectedMonth={selectedMonth}
+            selectedMonths={selectedMonths}
             availableMonths={availableMonths}
-            onChange={setSelectedMonth}
+            onChange={setSelectedMonths}
           />
           <button
             onClick={handleSync}
