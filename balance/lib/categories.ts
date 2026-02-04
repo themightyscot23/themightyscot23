@@ -21,100 +21,187 @@ export const APP_CATEGORIES: AppCategory[] = [
   'Other',
 ];
 
-// Mapping from Plaid categories to app categories
-const PLAID_CATEGORY_MAP: Record<string, AppCategory> = {
+// Mapping from Plaid's NEW personal_finance_category PRIMARY values (UPPER_SNAKE_CASE)
+const PLAID_PRIMARY_MAP: Record<string, AppCategory> = {
+  'INCOME': 'Income',
+  'TRANSFER_IN': 'Transfer',
+  'TRANSFER_OUT': 'Transfer',
+  'LOAN_PAYMENTS': 'Bills & Utilities',
+  'BANK_FEES': 'Fees & Charges',
+  'ENTERTAINMENT': 'Entertainment',
+  'FOOD_AND_DRINK': 'Dining Out',
+  'GENERAL_MERCHANDISE': 'Shopping',
+  'HOME_IMPROVEMENT': 'Housing',
+  'MEDICAL': 'Health',
+  'PERSONAL_CARE': 'Personal Care',
+  'GENERAL_SERVICES': 'Other',
+  'GOVERNMENT_AND_NON_PROFIT': 'Gifts & Donations',
+  'TRANSPORTATION': 'Transportation',
+  'TRAVEL': 'Travel',
+  'RENT_AND_UTILITIES': 'Bills & Utilities',
+};
+
+// Mapping for Plaid's DETAILED categories (more specific mappings)
+const PLAID_DETAILED_MAP: Record<string, AppCategory> = {
   // Income
-  'Income': 'Income',
-  'Transfer > Payroll': 'Income',
-  'Transfer > Deposit': 'Income',
+  'INCOME_DIVIDENDS': 'Income',
+  'INCOME_INTEREST_EARNED': 'Income',
+  'INCOME_RETIREMENT_PENSION': 'Income',
+  'INCOME_TAX_REFUND': 'Income',
+  'INCOME_UNEMPLOYMENT': 'Income',
+  'INCOME_WAGES': 'Income',
+  'INCOME_OTHER_INCOME': 'Income',
 
-  // Bank Fees
-  'Bank Fees': 'Fees & Charges',
-  'Bank Fees > ATM': 'Fees & Charges',
-  'Bank Fees > Overdraft': 'Fees & Charges',
-  'Interest > Interest Charged': 'Fees & Charges',
+  // Food - Groceries vs Dining
+  'FOOD_AND_DRINK_GROCERIES': 'Groceries',
+  'FOOD_AND_DRINK_SUPERMARKETS_AND_GROCERIES': 'Groceries',
+  'FOOD_AND_DRINK_RESTAURANTS': 'Dining Out',
+  'FOOD_AND_DRINK_FAST_FOOD': 'Dining Out',
+  'FOOD_AND_DRINK_COFFEE': 'Dining Out',
+  'FOOD_AND_DRINK_BAR': 'Dining Out',
+  'FOOD_AND_DRINK_OTHER_FOOD_AND_DRINK': 'Dining Out',
+  'FOOD_AND_DRINK_BEER_WINE_AND_LIQUOR': 'Dining Out',
+  'FOOD_AND_DRINK_VENDING_MACHINES': 'Dining Out',
 
-  // Food
-  'Food and Drink': 'Dining Out',
-  'Food and Drink > Restaurants': 'Dining Out',
-  'Food and Drink > Restaurants > Fast Food': 'Dining Out',
-  'Food and Drink > Restaurants > Coffee Shop': 'Dining Out',
-  'Food and Drink > Groceries': 'Groceries',
-  'Food and Drink > Bar': 'Dining Out',
+  // Rent and Utilities
+  'RENT_AND_UTILITIES_RENT': 'Housing',
+  'RENT_AND_UTILITIES_GAS_AND_ELECTRICITY': 'Bills & Utilities',
+  'RENT_AND_UTILITIES_INTERNET_AND_CABLE': 'Bills & Utilities',
+  'RENT_AND_UTILITIES_TELEPHONE': 'Bills & Utilities',
+  'RENT_AND_UTILITIES_WATER': 'Bills & Utilities',
+  'RENT_AND_UTILITIES_SEWAGE_AND_WASTE_MANAGEMENT': 'Bills & Utilities',
+  'RENT_AND_UTILITIES_OTHER_UTILITIES': 'Bills & Utilities',
 
-  // Shops
-  'Shops': 'Shopping',
-  'Shops > Supermarkets and Groceries': 'Groceries',
-  'Shops > Clothing and Accessories': 'Shopping',
-  'Shops > Electronics': 'Shopping',
-  'Shops > Department Stores': 'Shopping',
-  'Shops > Sporting Goods': 'Shopping',
-  'Shops > Books and News': 'Shopping',
-  'Shops > Pets': 'Shopping',
+  // General Services
+  'GENERAL_SERVICES_INSURANCE': 'Bills & Utilities',
+  'GENERAL_SERVICES_ACCOUNTING_AND_FINANCIAL_PLANNING': 'Bills & Utilities',
+  'GENERAL_SERVICES_EDUCATION': 'Education',
+  'GENERAL_SERVICES_POSTAGE_AND_SHIPPING': 'Other',
+  'GENERAL_SERVICES_STORAGE': 'Other',
+  'GENERAL_SERVICES_OTHER_GENERAL_SERVICES': 'Other',
+  'GENERAL_SERVICES_CONSULTING_AND_LEGAL': 'Other',
+  'GENERAL_SERVICES_AUTOMOTIVE': 'Transportation',
+  'GENERAL_SERVICES_SUBSCRIPTION': 'Subscriptions',
+
+  // Entertainment
+  'ENTERTAINMENT_TV_AND_MOVIES': 'Subscriptions',
+  'ENTERTAINMENT_MUSIC_AND_AUDIO': 'Subscriptions',
+  'ENTERTAINMENT_VIDEO_GAMES': 'Entertainment',
+  'ENTERTAINMENT_CASINOS_AND_GAMBLING': 'Entertainment',
+  'ENTERTAINMENT_SPORTING_EVENTS_AMUSEMENT_PARKS_AND_MUSEUMS': 'Entertainment',
+  'ENTERTAINMENT_OTHER_ENTERTAINMENT': 'Entertainment',
 
   // Transportation
-  'Transportation': 'Transportation',
-  'Transportation > Gas Stations': 'Transportation',
-  'Transportation > Parking': 'Transportation',
-  'Transportation > Public Transit': 'Transportation',
-  'Transportation > Taxi': 'Transportation',
-  'Transportation > Ride Share': 'Transportation',
+  'TRANSPORTATION_GAS': 'Transportation',
+  'TRANSPORTATION_PARKING': 'Transportation',
+  'TRANSPORTATION_PUBLIC_TRANSIT': 'Transportation',
+  'TRANSPORTATION_TAXIS_AND_RIDE_SHARES': 'Transportation',
+  'TRANSPORTATION_TOLLS': 'Transportation',
+  'TRANSPORTATION_OTHER_TRANSPORTATION': 'Transportation',
+  'TRANSPORTATION_BIKES_AND_SCOOTERS': 'Transportation',
+  'TRANSPORTATION_CAR_AND_TRUCK_RENTAL': 'Travel',
 
   // Travel
-  'Travel': 'Travel',
-  'Travel > Airlines and Aviation Services': 'Travel',
-  'Travel > Lodging': 'Travel',
-  'Travel > Car Rental': 'Travel',
+  'TRAVEL_FLIGHTS': 'Travel',
+  'TRAVEL_LODGING': 'Travel',
+  'TRAVEL_RENTAL_CARS': 'Travel',
+  'TRAVEL_OTHER_TRAVEL': 'Travel',
 
-  // Recreation & Entertainment
-  'Recreation': 'Entertainment',
-  'Recreation > Gyms and Fitness Centers': 'Health',
-  'Recreation > Arts and Entertainment': 'Entertainment',
-  'Entertainment': 'Entertainment',
+  // Medical
+  'MEDICAL_DENTAL_CARE': 'Health',
+  'MEDICAL_EYE_CARE': 'Health',
+  'MEDICAL_NURSING_CARE': 'Health',
+  'MEDICAL_PHARMACIES_AND_SUPPLEMENTS': 'Health',
+  'MEDICAL_PRIMARY_CARE': 'Health',
+  'MEDICAL_VETERINARY_SERVICES': 'Health',
+  'MEDICAL_OTHER_MEDICAL': 'Health',
 
-  // Services
-  'Service': 'Other',
-  'Service > Subscription': 'Subscriptions',
-  'Service > Streaming Services': 'Subscriptions',
-  'Service > Personal Care': 'Personal Care',
-  'Service > Financial': 'Other',
+  // Personal Care
+  'PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS': 'Health',
+  'PERSONAL_CARE_HAIR_AND_BEAUTY': 'Personal Care',
+  'PERSONAL_CARE_LAUNDRY_AND_DRY_CLEANING': 'Personal Care',
+  'PERSONAL_CARE_OTHER_PERSONAL_CARE': 'Personal Care',
 
-  // Healthcare
-  'Healthcare': 'Health',
-  'Healthcare > Medical Services': 'Health',
-  'Healthcare > Pharmacies': 'Health',
+  // Home Improvement
+  'HOME_IMPROVEMENT_FURNITURE': 'Shopping',
+  'HOME_IMPROVEMENT_HARDWARE': 'Shopping',
+  'HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE': 'Housing',
+  'HOME_IMPROVEMENT_SECURITY': 'Housing',
+  'HOME_IMPROVEMENT_OTHER_HOME_IMPROVEMENT': 'Housing',
 
-  // Housing
-  'Payment': 'Bills & Utilities',
-  'Payment > Rent': 'Housing',
-  'Payment > Insurance': 'Bills & Utilities',
-  'Utilities': 'Bills & Utilities',
+  // Bank Fees
+  'BANK_FEES_ATM_FEES': 'Fees & Charges',
+  'BANK_FEES_FOREIGN_TRANSACTION_FEES': 'Fees & Charges',
+  'BANK_FEES_INSUFFICIENT_FUNDS': 'Fees & Charges',
+  'BANK_FEES_INTEREST_CHARGE': 'Fees & Charges',
+  'BANK_FEES_OVERDRAFT_FEES': 'Fees & Charges',
+  'BANK_FEES_OTHER_BANK_FEES': 'Fees & Charges',
+
+  // Government
+  'GOVERNMENT_AND_NON_PROFIT_DONATIONS': 'Gifts & Donations',
+  'GOVERNMENT_AND_NON_PROFIT_GOVERNMENT_DEPARTMENTS_AND_AGENCIES': 'Bills & Utilities',
+  'GOVERNMENT_AND_NON_PROFIT_TAX_PAYMENT': 'Bills & Utilities',
+  'GOVERNMENT_AND_NON_PROFIT_OTHER_GOVERNMENT_AND_NON_PROFIT': 'Other',
+
+  // Loan Payments
+  'LOAN_PAYMENTS_CAR_PAYMENT': 'Bills & Utilities',
+  'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT': 'Transfer',
+  'LOAN_PAYMENTS_PERSONAL_LOAN_PAYMENT': 'Bills & Utilities',
+  'LOAN_PAYMENTS_MORTGAGE_PAYMENT': 'Housing',
+  'LOAN_PAYMENTS_STUDENT_LOAN_PAYMENT': 'Education',
+  'LOAN_PAYMENTS_OTHER_PAYMENT': 'Bills & Utilities',
 
   // Transfer
-  'Transfer': 'Transfer',
-  'Transfer > Internal Account Transfer': 'Transfer',
-  'Transfer > Wire': 'Transfer',
-  'Transfer > Credit': 'Transfer',
-  'Transfer > Debit': 'Transfer',
+  'TRANSFER_IN_CASH_ADVANCES_AND_LOANS': 'Transfer',
+  'TRANSFER_IN_DEPOSIT': 'Income',
+  'TRANSFER_IN_INVESTMENT_AND_RETIREMENT_FUNDS': 'Transfer',
+  'TRANSFER_IN_SAVINGS': 'Transfer',
+  'TRANSFER_IN_ACCOUNT_TRANSFER': 'Transfer',
+  'TRANSFER_IN_OTHER_TRANSFER_IN': 'Transfer',
+  'TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS': 'Transfer',
+  'TRANSFER_OUT_SAVINGS': 'Transfer',
+  'TRANSFER_OUT_WITHDRAWAL': 'Transfer',
+  'TRANSFER_OUT_ACCOUNT_TRANSFER': 'Transfer',
+  'TRANSFER_OUT_OTHER_TRANSFER_OUT': 'Transfer',
 
-  // Tax
-  'Tax': 'Bills & Utilities',
+  // General Merchandise
+  'GENERAL_MERCHANDISE_BOOKSTORES_AND_NEWSSTANDS': 'Shopping',
+  'GENERAL_MERCHANDISE_CLOTHING_AND_ACCESSORIES': 'Shopping',
+  'GENERAL_MERCHANDISE_CONVENIENCE_STORES': 'Shopping',
+  'GENERAL_MERCHANDISE_DEPARTMENT_STORES': 'Shopping',
+  'GENERAL_MERCHANDISE_DISCOUNT_STORES': 'Shopping',
+  'GENERAL_MERCHANDISE_ELECTRONICS': 'Shopping',
+  'GENERAL_MERCHANDISE_GIFTS_AND_NOVELTIES': 'Shopping',
+  'GENERAL_MERCHANDISE_OFFICE_SUPPLIES': 'Shopping',
+  'GENERAL_MERCHANDISE_ONLINE_MARKETPLACES': 'Shopping',
+  'GENERAL_MERCHANDISE_PET_SUPPLIES': 'Shopping',
+  'GENERAL_MERCHANDISE_SPORTING_GOODS': 'Shopping',
+  'GENERAL_MERCHANDISE_SUPERSTORES': 'Groceries',
+  'GENERAL_MERCHANDISE_TOBACCO_AND_VAPE': 'Shopping',
+  'GENERAL_MERCHANDISE_OTHER_GENERAL_MERCHANDISE': 'Shopping',
+};
 
-  // Interest earned
-  'Interest > Interest Earned': 'Income',
-
-  // Community & Education
-  'Community': 'Other',
-  'Education': 'Education',
-
-  // Gifts
-  'Gifts and Donations': 'Gifts & Donations',
+// Legacy mapping from old Plaid categories (lowercase for matching)
+const LEGACY_CATEGORY_MAP: Record<string, AppCategory> = {
+  'income': 'Income',
+  'transfer': 'Transfer',
+  'bank fees': 'Fees & Charges',
+  'food and drink': 'Dining Out',
+  'shops': 'Shopping',
+  'transportation': 'Transportation',
+  'travel': 'Travel',
+  'recreation': 'Entertainment',
+  'entertainment': 'Entertainment',
+  'healthcare': 'Health',
+  'service': 'Other',
+  'community': 'Other',
+  'government': 'Bills & Utilities',
+  'payment': 'Bills & Utilities',
 };
 
 /**
- * Maps Plaid category array to a single app category
- * @param plaidCategories - JSON string array of Plaid categories (e.g., '["Food and Drink", "Restaurants"]')
- * @returns The mapped app category
+ * Maps Plaid category to a single app category
+ * Handles both new personal_finance_category format and legacy category array
  */
 export function mapPlaidCategory(plaidCategories: string | null): AppCategory {
   if (!plaidCategories) {
@@ -122,24 +209,48 @@ export function mapPlaidCategory(plaidCategories: string | null): AppCategory {
   }
 
   try {
-    const categories: string[] = JSON.parse(plaidCategories);
+    const parsed = JSON.parse(plaidCategories);
 
-    if (categories.length === 0) {
+    // New format: { primary: "FOOD_AND_DRINK", detailed: "FOOD_AND_DRINK_GROCERIES" }
+    if (parsed && typeof parsed === 'object' && 'primary' in parsed) {
+      const { primary, detailed } = parsed;
+
+      // Try detailed mapping first (more specific)
+      if (detailed && PLAID_DETAILED_MAP[detailed]) {
+        return PLAID_DETAILED_MAP[detailed];
+      }
+
+      // Fall back to primary mapping
+      if (primary && PLAID_PRIMARY_MAP[primary]) {
+        return PLAID_PRIMARY_MAP[primary];
+      }
+
+      // Log unmapped categories for debugging
+      console.log('Unmapped Plaid category:', { primary, detailed });
       return 'Other';
     }
 
-    // Try to match the most specific category path first (e.g., "Food and Drink > Groceries")
-    for (let i = categories.length; i > 0; i--) {
-      const categoryPath = categories.slice(0, i).join(' > ');
-      if (PLAID_CATEGORY_MAP[categoryPath]) {
-        return PLAID_CATEGORY_MAP[categoryPath];
-      }
-    }
+    // Legacy format: ["Food and Drink", "Restaurants", "Fast Food"]
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const fullString = parsed.join(' ').toLowerCase();
 
-    // Fall back to primary category
-    const primaryCategory = categories[0];
-    if (PLAID_CATEGORY_MAP[primaryCategory]) {
-      return PLAID_CATEGORY_MAP[primaryCategory];
+      // Check for groceries first (important distinction from dining)
+      if (fullString.includes('groceries') || fullString.includes('supermarket')) {
+        return 'Groceries';
+      }
+
+      // Check primary category
+      const primary = parsed[0].toLowerCase();
+      if (LEGACY_CATEGORY_MAP[primary]) {
+        return LEGACY_CATEGORY_MAP[primary];
+      }
+
+      // Partial matching
+      for (const [key, value] of Object.entries(LEGACY_CATEGORY_MAP)) {
+        if (primary.includes(key) || fullString.includes(key)) {
+          return value;
+        }
+      }
     }
 
     return 'Other';

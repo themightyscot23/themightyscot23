@@ -17,15 +17,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen flex flex-col">
-          <Navigation />
-          <main className="flex-1">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              {children}
-            </div>
-          </main>
-        </div>
+      <body className={`${inter.className} min-h-screen overflow-y-auto`}>
+        <Navigation />
+        <main className="pb-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {children}
+          </div>
+        </main>
       </body>
     </html>
   );

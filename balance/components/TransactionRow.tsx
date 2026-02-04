@@ -1,16 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Transaction, AppCategory } from '@/lib/types';
+import { Transaction, AppCategory, Account } from '@/lib/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { CategoryBadge, CategorySelect } from './CategorySelect';
 
 interface TransactionRowProps {
   transaction: Transaction & { effective_category: AppCategory };
   onCategoryChange?: (id: string, category: AppCategory) => void;
+  showAccount?: boolean;
+  account?: Account;
 }
 
-export function TransactionRow({ transaction, onCategoryChange }: TransactionRowProps) {
+export function TransactionRow({ transaction, onCategoryChange, showAccount, account }: TransactionRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -43,6 +45,17 @@ export function TransactionRow({ transaction, onCategoryChange }: TransactionRow
         </div>
       </td>
 
+      {showAccount && (
+        <td className="px-4 py-3 whitespace-nowrap">
+          <div className="text-sm text-gray-600">
+            {account?.name || 'Unknown'}
+            {account?.mask && (
+              <span className="text-gray-400 ml-1">••{account.mask}</span>
+            )}
+          </div>
+        </td>
+      )}
+
       <td className="px-4 py-3">
         {isEditing ? (
           <CategorySelect
@@ -71,7 +84,7 @@ export function TransactionRow({ transaction, onCategoryChange }: TransactionRow
 }
 
 // Mobile card version
-export function TransactionCard({ transaction, onCategoryChange }: TransactionRowProps) {
+export function TransactionCard({ transaction, onCategoryChange, showAccount, account }: TransactionRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -91,9 +104,7 @@ export function TransactionCard({ transaction, onCategoryChange }: TransactionRo
 
   return (
     <div
-      className={`bg-white rounded-lg p-4 shadow-sm border border-gray-100 ${
-        transaction.pending ? 'opacity-60' : ''
-      }`}
+      className={`p-4 ${transaction.pending ? 'opacity-60' : ''}`}
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1 min-w-0">
@@ -104,6 +115,11 @@ export function TransactionCard({ transaction, onCategoryChange }: TransactionRo
               <span className="ml-2 text-yellow-600 font-medium">Pending</span>
             )}
           </p>
+          {showAccount && account && (
+            <p className="text-xs text-gray-400 mt-1">
+              {account.name} {account.mask && `••${account.mask}`}
+            </p>
+          )}
         </div>
         <p
           className={`text-sm font-semibold ${
