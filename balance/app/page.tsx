@@ -239,9 +239,10 @@ export default function Dashboard() {
         loading={loading}
       />
 
-      {/* Income & Spending by Category - Full Width */}
+      {/* Income & Spending Charts - Full Width */}
       <CategoryChart
         data={summary?.categoryBreakdown || []}
+        transactions={transactions}
         loading={loading}
         onCategoryClick={handleCategoryClick}
       />
