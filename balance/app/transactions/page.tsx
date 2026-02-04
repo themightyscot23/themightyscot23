@@ -221,13 +221,15 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transactions List */}
-      <TransactionList
-        transactions={filteredTransactions}
-        onCategoryChange={handleCategoryChange}
-        loading={loading}
-        showAccount={!accountFilter}
-        accounts={accounts}
-      />
+      <div className="max-h-[calc(100vh-400px)] min-h-[400px] overflow-y-auto">
+        <TransactionList
+          transactions={filteredTransactions}
+          onCategoryChange={handleCategoryChange}
+          loading={loading}
+          showAccount={!accountFilter}
+          accounts={accounts}
+        />
+      </div>
     </div>
   );
 }

@@ -174,13 +174,15 @@ export default function Dashboard() {
 
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Recent Transactions
+            Transactions ({transactions.length})
           </h3>
-          <TransactionList
-            transactions={transactions.slice(0, 10)}
-            onCategoryChange={handleCategoryChange}
-            loading={loading}
-          />
+          <div className="max-h-[600px] overflow-y-auto">
+            <TransactionList
+              transactions={transactions}
+              onCategoryChange={handleCategoryChange}
+              loading={loading}
+            />
+          </div>
         </div>
       </div>
     </div>
