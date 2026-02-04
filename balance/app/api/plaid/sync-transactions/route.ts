@@ -58,15 +58,17 @@ export async function POST(request: NextRequest) {
             ? JSON.stringify(txn.category)
             : null;
 
-          // Log first few transactions for debugging
-          if (totalAdded < 5) {
-            console.log('Transaction category data:', {
-              name: txn.name,
-              merchant: txn.merchant_name,
-              personal_finance_category: txn.personal_finance_category,
-              legacy_category: txn.category,
-              stored_as: categoryData,
-            });
+          // Log transactions for debugging category mapping
+          if (totalAdded < 10) {
+            console.log('=== PLAID TRANSACTION ===');
+            console.log('Name:', txn.name);
+            console.log('Merchant:', txn.merchant_name);
+            console.log('Amount:', txn.amount);
+            console.log('Date:', txn.date);
+            console.log('Personal Finance Category:', JSON.stringify(txn.personal_finance_category, null, 2));
+            console.log('Legacy Category:', JSON.stringify(txn.category, null, 2));
+            console.log('Stored as:', categoryData);
+            console.log('=========================');
           }
 
           upsertTransaction({

@@ -64,17 +64,17 @@ export function TransactionList({
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                 Description
               </th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Amount
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
+                Category
+              </th>
               {showAccount && (
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                   Account
                 </th>
               )}
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Category
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Amount
-              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">

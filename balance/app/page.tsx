@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { RefreshCw, X } from 'lucide-react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { RefreshCw, X, ArrowUpDown, Building2 } from 'lucide-react';
 import { CashFlowCard } from '@/components/CashFlowCard';
 import { MonthSelector } from '@/components/MonthSelector';
 import { CategoryChart } from '@/components/CategoryChart';
@@ -9,6 +9,9 @@ import { TransactionList } from '@/components/TransactionList';
 import { PlaidLinkButton } from '@/components/PlaidLinkButton';
 import { CashFlowSummary, CategorySpending, Transaction, AppCategory, Account } from '@/lib/types';
 import { getCurrentYearMonth } from '@/lib/utils';
+
+type SortOption = 'date' | 'amount';
+type SortDirection = 'asc' | 'desc';
 
 interface MonthlySummary {
   months: string[];
@@ -27,6 +30,9 @@ export default function Dashboard() {
   const [syncing, setSyncing] = useState(false);
   const [hasAccounts, setHasAccounts] = useState<boolean | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<AppCategory | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [accountFilter, setAccountFilter] = useState<string>('');
 
   const fetchAvailableMonths = async () => {
     const res = await fetch('/api/transactions?available_months=true');
@@ -106,10 +112,55 @@ export default function Dashboard() {
     setCategoryFilter(null);
   };
 
-  // Filter transactions by selected category
-  const filteredTransactions = categoryFilter
-    ? transactions.filter((t) => t.effective_category === categoryFilter)
-    : transactions;
+  const clearAccountFilter = () => {
+    setAccountFilter('');
+  };
+
+  const toggleSortByAmount = () => {
+    if (sortBy === 'amount') {
+      // Toggle direction if already sorting by amount
+      setSortDirection(sortDirection === 'desc' ? 'asc' : 'desc');
+    } else {
+      // Switch to amount sort, default to largest first
+      setSortBy('amount');
+      setSortDirection('desc');
+    }
+  };
+
+  const resetSort = () => {
+    setSortBy('date');
+    setSortDirection('desc');
+  };
+
+  // Filter and sort transactions
+  const filteredTransactions = useMemo(() => {
+    let result = [...transactions];
+
+    // Apply category filter
+    if (categoryFilter) {
+      result = result.filter((t) => t.effective_category === categoryFilter);
+    }
+
+    // Apply account filter
+    if (accountFilter) {
+      result = result.filter((t) => t.account_id === accountFilter);
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      if (sortBy === 'amount') {
+        const amountA = Math.abs(a.amount);
+        const amountB = Math.abs(b.amount);
+        return sortDirection === 'desc' ? amountB - amountA : amountA - amountB;
+      } else {
+        // Default: sort by date
+        const dateCompare = b.date.localeCompare(a.date);
+        return sortDirection === 'desc' ? dateCompare : -dateCompare;
+      }
+    });
+
+    return result;
+  }, [transactions, categoryFilter, accountFilter, sortBy, sortDirection]);
 
   useEffect(() => {
     checkAccounts();
@@ -197,29 +248,90 @@ export default function Dashboard() {
 
       {/* Transactions - Full Width */}
       <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <h3 className="text-lg font-semibold text-gray-900">
             Transactions ({filteredTransactions.length})
           </h3>
-          {categoryFilter && (
+
+          {/* Sorting and Filter Controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Sort by Amount */}
             <button
-              onClick={clearCategoryFilter}
-              className="inline-flex items-center gap-1 px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+              onClick={toggleSortByAmount}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                sortBy === 'amount'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
             >
-              {categoryFilter}
-              <X className="w-3 h-3" />
+              <ArrowUpDown className="w-3.5 h-3.5" />
+              {sortBy === 'amount'
+                ? sortDirection === 'desc'
+                  ? 'Largest First'
+                  : 'Smallest First'
+                : 'Sort by Amount'}
             </button>
-          )}
+
+            {/* Account Filter */}
+            {accounts.length > 0 && (
+              <select
+                value={accountFilter}
+                onChange={(e) => setAccountFilter(e.target.value)}
+                className={`px-3 py-1.5 text-sm rounded-md border-0 transition-colors ${
+                  accountFilter
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                <option value="">All Accounts</option>
+                {accounts.map((account) => {
+                  const institutionName = (account as Account & { institution_name?: string }).institution_name;
+                  const displayName = institutionName
+                    ? `${institutionName} ${account.name}`
+                    : account.name;
+                  return (
+                    <option key={account.id} value={account.id}>
+                      {displayName} {account.mask && `••${account.mask}`}
+                    </option>
+                  );
+                })}
+              </select>
+            )}
+
+            {/* Category Filter Badge */}
+            {categoryFilter && (
+              <button
+                onClick={clearCategoryFilter}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+              >
+                {categoryFilter}
+                <X className="w-3 h-3" />
+              </button>
+            )}
+
+            {/* Clear All Filters */}
+            {(sortBy !== 'date' || accountFilter || categoryFilter) && (
+              <button
+                onClick={() => {
+                  resetSort();
+                  clearAccountFilter();
+                  clearCategoryFilter();
+                }}
+                className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
         </div>
-        <div className="max-h-[600px] overflow-y-auto">
-          <TransactionList
-            transactions={filteredTransactions}
-            onCategoryChange={handleCategoryChange}
-            loading={loading}
-            showAccount={true}
-            accounts={accounts}
-          />
-        </div>
+
+        <TransactionList
+          transactions={filteredTransactions}
+          onCategoryChange={handleCategoryChange}
+          loading={loading}
+          showAccount={true}
+          accounts={accounts}
+        />
       </div>
     </div>
   );
