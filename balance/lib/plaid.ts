@@ -13,6 +13,14 @@ export function getPlaidClient(): PlaidApi {
     const secret = process.env.PLAID_SECRET;
     const env = process.env.PLAID_ENV || 'sandbox';
 
+    // Debug logging
+    console.log('=== PLAID CONFIG DEBUG ===');
+    console.log('PLAID_CLIENT_ID:', clientId ? `${clientId.substring(0, 8)}...` : 'UNDEFINED');
+    console.log('PLAID_SECRET:', secret ? `${secret.substring(0, 8)}...` : 'UNDEFINED');
+    console.log('PLAID_ENV:', env);
+    console.log('All env keys:', Object.keys(process.env).filter(k => k.includes('PLAID')));
+    console.log('==========================');
+
     if (!clientId || !secret) {
       throw new Error(
         `Missing Plaid credentials. PLAID_CLIENT_ID: ${clientId ? 'set' : 'missing'}, PLAID_SECRET: ${secret ? 'set' : 'missing'}`
