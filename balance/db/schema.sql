@@ -45,8 +45,20 @@ CREATE TABLE IF NOT EXISTS sync_state (
   FOREIGN KEY (plaid_item_id) REFERENCES plaid_items(id) ON DELETE CASCADE
 );
 
+-- Category Rules (merchant -> category mappings created by user)
+CREATE TABLE IF NOT EXISTS category_rules (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  merchant_name TEXT NOT NULL,
+  merchant_pattern TEXT,     -- Optional pattern for fuzzy matching
+  category TEXT NOT NULL,    -- The user-assigned category
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(merchant_name)
+);
+
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_category ON transactions(user_category);
 CREATE INDEX IF NOT EXISTS idx_accounts_plaid_item ON accounts(plaid_item_id);
+CREATE INDEX IF NOT EXISTS idx_category_rules_merchant ON category_rules(merchant_name);

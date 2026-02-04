@@ -7,6 +7,8 @@ import {
   updateSyncState,
   upsertTransaction,
   deleteTransaction,
+  findMatchingCategoryRule,
+  updateTransactionCategory,
 } from '@/lib/db';
 import { RemovedTransaction, Transaction } from 'plaid';
 
@@ -26,6 +28,7 @@ export async function POST(request: NextRequest) {
     let totalAdded = 0;
     let totalModified = 0;
     let totalRemoved = 0;
+    let rulesApplied = 0;
 
     for (const item of items) {
       if (!item) continue;
@@ -77,6 +80,13 @@ export async function POST(request: NextRequest) {
             user_category: null,
             pending: txn.pending,
           });
+
+          // Apply category rules for this merchant
+          const rule = findMatchingCategoryRule(txn.merchant_name, txn.name);
+          if (rule) {
+            updateTransactionCategory(txn.transaction_id, rule.category);
+            rulesApplied++;
+          }
         }
         totalAdded += added.length;
 
@@ -128,6 +138,7 @@ export async function POST(request: NextRequest) {
       added: totalAdded,
       modified: totalModified,
       removed: totalRemoved,
+      rules_applied: rulesApplied,
     });
   } catch (error) {
     console.error('Error syncing transactions:', error);

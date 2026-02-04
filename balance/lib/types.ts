@@ -83,3 +83,12 @@ export interface TransactionFilter {
   endDate?: string;
   accountId?: string;
 }
+
+export interface CategoryRule {
+  id: number;
+  merchant_name: string;
+  merchant_pattern: string | null;
+  category: string;
+  created_at: string;
+  updated_at: string;
+}

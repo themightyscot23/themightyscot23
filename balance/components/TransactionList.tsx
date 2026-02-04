@@ -5,10 +5,11 @@ import { TransactionRow, TransactionCard } from './TransactionRow';
 
 interface TransactionListProps {
   transactions: (Transaction & { effective_category: AppCategory })[];
-  onCategoryChange?: (id: string, category: AppCategory) => void;
+  onCategoryChange?: (id: string, category: AppCategory, merchantName: string | null) => void;
   loading?: boolean;
   showAccount?: boolean;
   accounts?: Account[];
+  showPlaidCategory?: boolean;
 }
 
 export function TransactionList({
@@ -17,6 +18,7 @@ export function TransactionList({
   loading,
   showAccount = false,
   accounts = [],
+  showPlaidCategory = true,
 }: TransactionListProps) {
   // Create account lookup map
   const accountMap = new Map(accounts.map((a) => [a.id, a]));
@@ -83,6 +85,7 @@ export function TransactionList({
                 onCategoryChange={onCategoryChange}
                 showAccount={showAccount}
                 account={accountMap.get(transaction.account_id)}
+                showPlaidCategory={showPlaidCategory}
               />
             ))}
           </tbody>
@@ -98,6 +101,7 @@ export function TransactionList({
             onCategoryChange={onCategoryChange}
             showAccount={showAccount}
             account={accountMap.get(transaction.account_id)}
+            showPlaidCategory={showPlaidCategory}
           />
         ))}
       </div>

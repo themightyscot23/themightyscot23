@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { PlaidItem, Account, Transaction, SyncState } from './types';
+import { PlaidItem, Account, Transaction, SyncState, CategoryRule } from './types';
 
 // Database file path
 const DB_PATH = path.join(process.cwd(), 'db', 'balance.db');
@@ -253,4 +253,81 @@ export function updateSyncState(plaidItemId: string, cursor: string): void {
       last_synced_at = excluded.last_synced_at
   `);
   stmt.run(plaidItemId, cursor);
+}
+
+// ============ Category Rules ============
+
+export function createOrUpdateCategoryRule(merchantName: string, category: string): CategoryRule {
+  const db = getDb();
+  const stmt = db.prepare(`
+    INSERT INTO category_rules (merchant_name, category)
+    VALUES (?, ?)
+    ON CONFLICT(merchant_name) DO UPDATE SET
+      category = excluded.category,
+      updated_at = CURRENT_TIMESTAMP
+  `);
+  stmt.run(merchantName, category);
+  return getCategoryRuleByMerchant(merchantName)!;
+}
+
+export function getCategoryRuleByMerchant(merchantName: string): CategoryRule | null {
+  const db = getDb();
+  const stmt = db.prepare('SELECT * FROM category_rules WHERE merchant_name = ?');
+  return stmt.get(merchantName) as CategoryRule | null;
+}
+
+export function getAllCategoryRules(): CategoryRule[] {
+  const db = getDb();
+  const stmt = db.prepare('SELECT * FROM category_rules ORDER BY merchant_name');
+  return stmt.all() as CategoryRule[];
+}
+
+export function deleteCategoryRule(id: number): void {
+  const db = getDb();
+  const stmt = db.prepare('DELETE FROM category_rules WHERE id = ?');
+  stmt.run(id);
+}
+
+export function findMatchingCategoryRule(merchantName: string | null, transactionName: string | null): CategoryRule | null {
+  if (!merchantName && !transactionName) return null;
+
+  const db = getDb();
+
+  // Try exact match on merchant_name first
+  if (merchantName) {
+    const exactMatch = db.prepare('SELECT * FROM category_rules WHERE LOWER(merchant_name) = LOWER(?)').get(merchantName) as CategoryRule | null;
+    if (exactMatch) return exactMatch;
+  }
+
+  // Try exact match on transaction name
+  if (transactionName) {
+    const nameMatch = db.prepare('SELECT * FROM category_rules WHERE LOWER(merchant_name) = LOWER(?)').get(transactionName) as CategoryRule | null;
+    if (nameMatch) return nameMatch;
+  }
+
+  // Try partial match (merchant_name contains the rule or vice versa)
+  if (merchantName) {
+    const partialMatch = db.prepare(`
+      SELECT * FROM category_rules
+      WHERE LOWER(?) LIKE '%' || LOWER(merchant_name) || '%'
+         OR LOWER(merchant_name) LIKE '%' || LOWER(?) || '%'
+      LIMIT 1
+    `).get(merchantName, merchantName) as CategoryRule | null;
+    if (partialMatch) return partialMatch;
+  }
+
+  return null;
+}
+
+export function applyCategoriesToMatchingTransactions(merchantName: string, category: string): number {
+  const db = getDb();
+  // Update all transactions with this merchant that don't have a user category
+  const stmt = db.prepare(`
+    UPDATE transactions
+    SET user_category = ?
+    WHERE (LOWER(merchant_name) = LOWER(?) OR LOWER(name) = LOWER(?))
+      AND user_category IS NULL
+  `);
+  const result = stmt.run(category, merchantName, merchantName);
+  return result.changes;
 }
