@@ -43,12 +43,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-[#003d2a] via-[#006f4e] to-[#00956a] overflow-hidden">
-      {/* Decorative circles */}
-      <div className="absolute top-10 left-10 w-80 h-80 bg-white/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
-      <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-white/5 rounded-full blur-2xl" />
-      <div className="absolute bottom-1/3 left-1/4 w-72 h-72 bg-[#00b36b]/10 rounded-full blur-2xl" />
+    <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-100 via-gray-50 to-emerald-50 overflow-hidden">
+      {/* Subtle decorative circles */}
+      <div className="absolute top-10 left-10 w-80 h-80 bg-[#006f4e]/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-[#006f4e]/5 rounded-full blur-3xl" />
+      <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-emerald-100/50 rounded-full blur-2xl" />
+      <div className="absolute bottom-1/3 left-1/4 w-72 h-72 bg-[#006f4e]/5 rounded-full blur-2xl" />
 
       {/* Login form modal */}
       <div className="relative z-10 w-full max-w-md mx-4">
