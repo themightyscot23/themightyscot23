@@ -39,34 +39,59 @@ function initializeSchema(): void {
 
   const schema = fs.readFileSync(SCHEMA_PATH, 'utf-8');
   db.exec(schema);
+
+  // Run migrations for existing databases
+  runMigrations();
+}
+
+/**
+ * Run database migrations for existing databases
+ */
+function runMigrations(): void {
+  if (!db) return;
+
+  // Check if user_id column exists in plaid_items
+  const tableInfo = db.prepare("PRAGMA table_info(plaid_items)").all() as { name: string }[];
+  const hasUserIdColumn = tableInfo.some(col => col.name === 'user_id');
+
+  if (!hasUserIdColumn) {
+    console.log('Running migration: Adding user_id column to plaid_items...');
+    // Add user_id column (nullable for migration)
+    db.exec('ALTER TABLE plaid_items ADD COLUMN user_id TEXT');
+
+    // Create index for the new column
+    db.exec('CREATE INDEX IF NOT EXISTS idx_plaid_items_user ON plaid_items(user_id)');
+
+    console.log('Migration complete: user_id column added to plaid_items');
+  }
 }
 
 // ============ Plaid Items ============
 
-export function createPlaidItem(item: Omit<PlaidItem, 'created_at'> & { user_id: string }): PlaidItem & { user_id: string } {
+export function createPlaidItem(item: Omit<PlaidItem, 'created_at'> & { user_id?: string }): PlaidItem {
   const db = getDb();
   const stmt = db.prepare(`
     INSERT INTO plaid_items (id, user_id, access_token, institution_id, institution_name)
     VALUES (?, ?, ?, ?, ?)
   `);
-  stmt.run(item.id, item.user_id, item.access_token, item.institution_id, item.institution_name);
+  stmt.run(item.id, item.user_id || null, item.access_token, item.institution_id, item.institution_name);
   return getPlaidItem(item.id)!;
 }
 
-export function getPlaidItem(id: string): (PlaidItem & { user_id: string }) | null {
+export function getPlaidItem(id: string): PlaidItem | null {
   const db = getDb();
   const stmt = db.prepare('SELECT * FROM plaid_items WHERE id = ?');
-  return stmt.get(id) as (PlaidItem & { user_id: string }) | null;
+  return stmt.get(id) as PlaidItem | null;
 }
 
-export function getAllPlaidItems(userId?: string): (PlaidItem & { user_id: string })[] {
+export function getAllPlaidItems(userId?: string): PlaidItem[] {
   const db = getDb();
   if (userId) {
     const stmt = db.prepare('SELECT * FROM plaid_items WHERE user_id = ? ORDER BY created_at DESC');
-    return stmt.all(userId) as (PlaidItem & { user_id: string })[];
+    return stmt.all(userId) as PlaidItem[];
   }
   const stmt = db.prepare('SELECT * FROM plaid_items ORDER BY created_at DESC');
-  return stmt.all() as (PlaidItem & { user_id: string })[];
+  return stmt.all() as PlaidItem[];
 }
 
 export function deletePlaidItem(id: string, userId?: string): void {
@@ -124,6 +149,7 @@ export function getAllAccounts(userId?: string): (Account & { institution_name: 
     `);
     return stmt.all(userId) as (Account & { institution_name: string })[];
   }
+  // Fallback: return all accounts (for backwards compatibility)
   const stmt = db.prepare(`
     SELECT a.*, p.institution_name
     FROM accounts a
@@ -276,25 +302,6 @@ export function getAvailableMonths(userId?: string): string[] {
   return (stmt.all() as { month: string }[]).map((row) => row.month);
 }
 
-// ============ Users & Sessions ============
-
-export interface User {
-  id: string;
-  email: string;
-  name: string | null;
-}
-
-export function getUserFromSession(sessionToken: string): User | null {
-  const db = getDb();
-  const result = db.prepare(`
-    SELECT u.id, u.email, u.name
-    FROM sessions s
-    JOIN users u ON s.user_id = u.id
-    WHERE s.token = ? AND s.expires_at > datetime('now')
-  `).get(sessionToken) as User | undefined;
-  return result || null;
-}
-
 // ============ Sync State ============
 
 export function getSyncState(plaidItemId: string): SyncState | null {
@@ -390,4 +397,23 @@ export function applyCategoriesToMatchingTransactions(merchantName: string, cate
   `);
   const result = stmt.run(category, merchantName, merchantName);
   return result.changes;
+}
+
+// ============ Users & Sessions ============
+
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+}
+
+export function getUserFromSession(sessionToken: string): User | null {
+  const db = getDb();
+  const result = db.prepare(`
+    SELECT u.id, u.email, u.name
+    FROM sessions s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.token = ? AND s.expires_at > datetime('now')
+  `).get(sessionToken) as User | undefined;
+  return result || null;
 }

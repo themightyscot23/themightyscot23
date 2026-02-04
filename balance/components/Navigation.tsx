@@ -23,6 +23,9 @@ export function Navigation() {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Auth pages that don't require login
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password';
+
   useEffect(() => {
     // Check if user is logged in
     const checkAuth = async () => {
@@ -31,15 +34,21 @@ export function Navigation() {
         if (res.ok) {
           const data = await res.json();
           setUser(data.user);
+        } else if (!isAuthPage) {
+          // Redirect to login if not authenticated and not on auth page
+          router.push('/login');
         }
       } catch {
-        // Not logged in
+        // Not logged in - redirect to login if not on auth page
+        if (!isAuthPage) {
+          router.push('/login');
+        }
       } finally {
         setLoading(false);
       }
     };
     checkAuth();
-  }, [pathname]);
+  }, [pathname, isAuthPage, router]);
 
   const handleLogout = async () => {
     try {
@@ -52,16 +61,13 @@ export function Navigation() {
     }
   };
 
-  // Don't show nav items on auth pages
-  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password';
-
   return (
     <nav className="bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#006f4e] rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">B</span>
               </div>
               <span className="text-xl font-bold text-gray-900">Balance</span>
@@ -80,7 +86,7 @@ export function Navigation() {
                   href={item.href}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-blue-50 text-blue-600'
+                      ? 'bg-emerald-50 text-[#006f4e]'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
