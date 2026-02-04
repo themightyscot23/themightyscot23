@@ -20,6 +20,12 @@ export function TransactionRow({ transaction, onCategoryChange, showAccount, acc
   const displayAmount = Math.abs(transaction.amount);
   const displayName = transaction.merchant_name || transaction.name || 'Unknown';
 
+  // Get institution name from account (joined from plaid_items)
+  const institutionName = (account as Account & { institution_name?: string })?.institution_name;
+  const accountDisplayName = institutionName
+    ? `${institutionName} ${account?.name || ''}`
+    : account?.name || 'Unknown';
+
   const handleCategoryChange = async (category: AppCategory) => {
     setSaving(true);
     try {
@@ -45,16 +51,14 @@ export function TransactionRow({ transaction, onCategoryChange, showAccount, acc
         </div>
       </td>
 
-      {showAccount && (
-        <td className="px-4 py-3 whitespace-nowrap">
-          <div className="text-sm text-gray-600">
-            {account?.name || 'Unknown'}
-            {account?.mask && (
-              <span className="text-gray-400 ml-1">••{account.mask}</span>
-            )}
-          </div>
-        </td>
-      )}
+      <td
+        className={`px-4 py-3 whitespace-nowrap text-sm font-medium text-right ${
+          isIncome ? 'text-income' : 'text-gray-900'
+        }`}
+      >
+        {isIncome ? '+' : '-'}
+        {formatCurrency(displayAmount)}
+      </td>
 
       <td className="px-4 py-3">
         {isEditing ? (
@@ -71,14 +75,16 @@ export function TransactionRow({ transaction, onCategoryChange, showAccount, acc
         )}
       </td>
 
-      <td
-        className={`px-4 py-3 whitespace-nowrap text-sm font-medium text-right ${
-          isIncome ? 'text-income' : 'text-gray-900'
-        }`}
-      >
-        {isIncome ? '+' : '-'}
-        {formatCurrency(displayAmount)}
-      </td>
+      {showAccount && (
+        <td className="px-4 py-3 whitespace-nowrap">
+          <div className="text-sm text-gray-600">
+            {accountDisplayName}
+            {account?.mask && (
+              <span className="text-gray-400 ml-1">••{account.mask}</span>
+            )}
+          </div>
+        </td>
+      )}
     </tr>
   );
 }
@@ -91,6 +97,12 @@ export function TransactionCard({ transaction, onCategoryChange, showAccount, ac
   const isIncome = transaction.amount < 0;
   const displayAmount = Math.abs(transaction.amount);
   const displayName = transaction.merchant_name || transaction.name || 'Unknown';
+
+  // Get institution name from account (joined from plaid_items)
+  const institutionName = (account as Account & { institution_name?: string })?.institution_name;
+  const accountDisplayName = institutionName
+    ? `${institutionName} ${account?.name || ''}`
+    : account?.name || 'Unknown';
 
   const handleCategoryChange = async (category: AppCategory) => {
     setSaving(true);
@@ -117,7 +129,7 @@ export function TransactionCard({ transaction, onCategoryChange, showAccount, ac
           </p>
           {showAccount && account && (
             <p className="text-xs text-gray-400 mt-1">
-              {account.name} {account.mask && `••${account.mask}`}
+              {accountDisplayName} {account.mask && `••${account.mask}`}
             </p>
           )}
         </div>
