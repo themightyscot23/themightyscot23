@@ -1,9 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, Check, X } from 'lucide-react';
+
+interface PasswordRequirement {
+  label: string;
+  met: boolean;
+}
 
 export default function SignupPage() {
   const router = useRouter();
@@ -15,17 +20,27 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Password requirements checker
+  const passwordRequirements: PasswordRequirement[] = useMemo(() => [
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'Contains uppercase letter', met: /[A-Z]/.test(password) },
+    { label: 'Contains a number', met: /[0-9]/.test(password) },
+  ], [password]);
+
+  const allRequirementsMet = passwordRequirements.every(req => req.met);
+  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+    if (!allRequirementsMet) {
+      setError('Please meet all password requirements');
       return;
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
 
@@ -121,8 +136,10 @@ export default function SignupPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="new-password"
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
-                  placeholder="At least 8 characters"
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10 ${
+                    password && allRequirementsMet ? 'border-green-300' : 'border-gray-200'
+                  }`}
+                  placeholder="Create a strong password"
                 />
                 <button
                   type="button"
@@ -132,6 +149,27 @@ export default function SignupPage() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+
+              {/* Password Requirements */}
+              {password && (
+                <div className="mt-2 space-y-1">
+                  {passwordRequirements.map((req, index) => (
+                    <div
+                      key={index}
+                      className={`flex items-center gap-2 text-xs ${
+                        req.met ? 'text-green-600' : 'text-gray-500'
+                      }`}
+                    >
+                      {req.met ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <X className="w-3.5 h-3.5" />
+                      )}
+                      {req.label}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -145,14 +183,28 @@ export default function SignupPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  confirmPassword
+                    ? passwordsMatch
+                      ? 'border-green-300'
+                      : 'border-red-300'
+                    : 'border-gray-200'
+                }`}
                 placeholder="Confirm your password"
               />
+              {confirmPassword && !passwordsMatch && (
+                <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
+              )}
+              {passwordsMatch && (
+                <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" /> Passwords match
+                </p>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !allRequirementsMet || !passwordsMatch}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
