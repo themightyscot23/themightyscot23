@@ -52,27 +52,14 @@ export default function LoginPage() {
         <div className="absolute top-1/2 left-1/3 w-48 h-48 bg-white/5 rounded-full blur-lg" />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-16 text-white">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-sm">
-            <span className="text-white font-bold text-3xl">B</span>
-          </div>
-          <h1 className="text-5xl font-bold mb-4">Balance</h1>
-          <p className="text-xl text-white/80 mb-8 max-w-md">
-            Take control of your finances. Track spending, set budgets, and achieve your financial goals.
-          </p>
-          <div className="flex gap-8 text-white/60">
-            <div>
-              <div className="text-3xl font-bold text-white">100%</div>
-              <div className="text-sm">Secure</div>
+        <div className="relative z-10 flex items-center justify-center px-12 text-white">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+              <span className="text-white font-bold text-3xl">B</span>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-white">Real-time</div>
-              <div className="text-sm">Sync</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-white">Smart</div>
-              <div className="text-sm">Insights</div>
-            </div>
+            <p className="text-xl text-white/90 max-w-sm">
+              Join thousands of users who have taken control of their finances with Balance
+            </p>
           </div>
         </div>
       </div>
