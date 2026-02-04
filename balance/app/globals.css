@@ -7,6 +7,12 @@
   --background-rgb: 248, 250, 252;
 }
 
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
