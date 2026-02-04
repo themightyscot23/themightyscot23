@@ -53,25 +53,17 @@ export default function LoginPage() {
       {/* Login form modal */}
       <div className="relative z-10 w-full max-w-md mx-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8">
-          {/* Header with B logo and artful tagline banner */}
+          {/* Header with B logo and tagline in styled banner */}
           <div className="mb-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-[#006f4e] to-[#00956a] rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span className="text-white font-bold text-2xl">B</span>
-              </div>
-              <div className="relative flex-1">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#006f4e]/10 via-[#00956a]/10 to-transparent rounded-lg -m-2" />
-                <p className="relative text-gray-800 text-base font-medium leading-snug py-2">
+            <div className="bg-gradient-to-r from-[#006f4e]/8 via-[#00956a]/6 to-[#006f4e]/4 rounded-xl p-4">
+              <div className="flex items-center gap-5">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#006f4e] to-[#00956a] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                  <span className="text-white font-bold text-xl">B</span>
+                </div>
+                <p className="text-gray-700 text-base font-medium leading-relaxed">
                   Join users who are tracking their finances with Balance
                 </p>
               </div>
-            </div>
-
-            {/* Decorative accent line */}
-            <div className="flex items-center gap-2 mt-2">
-              <div className="h-1 w-12 bg-gradient-to-r from-[#006f4e] to-[#00956a] rounded-full" />
-              <div className="h-1 w-6 bg-[#006f4e]/30 rounded-full" />
-              <div className="h-1 w-3 bg-[#006f4e]/20 rounded-full" />
             </div>
           </div>
 
