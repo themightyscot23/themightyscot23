@@ -4,10 +4,12 @@
 -- Plaid Items (connected institutions)
 CREATE TABLE IF NOT EXISTS plaid_items (
   id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
   access_token TEXT NOT NULL,
   institution_id TEXT,
   institution_name TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Connected Accounts
@@ -76,9 +78,6 @@ CREATE TABLE IF NOT EXISTS sessions (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Link plaid_items to users (add user_id column)
--- Note: In a migration, we'd ALTER TABLE. For new installs, modify plaid_items above.
-
 -- Category Rules (merchant -> category mappings created by user)
 CREATE TABLE IF NOT EXISTS category_rules (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,6 +94,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_category ON transactions(user_category);
 CREATE INDEX IF NOT EXISTS idx_accounts_plaid_item ON accounts(plaid_item_id);
+CREATE INDEX IF NOT EXISTS idx_plaid_items_user ON plaid_items(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tokens(token);
