@@ -5,6 +5,8 @@ import {
   getAvailableMonths,
   updateTransactionCategory,
   getTransaction,
+  createOrUpdateCategoryRule,
+  applyCategoriesToMatchingTransactions,
 } from '@/lib/db';
 import { getEffectiveCategory } from '@/lib/categories';
 import { AppCategory, CashFlowSummary, CategorySpending } from '@/lib/types';
@@ -130,7 +132,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { id, user_category } = await request.json();
+    const { id, user_category, merchant_name, create_rule = true } = await request.json();
 
     if (!id || !user_category) {
       return NextResponse.json(
@@ -139,7 +141,19 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Update the transaction category
     updateTransactionCategory(id, user_category);
+
+    let rulesApplied = 0;
+
+    // Create a category rule for this merchant if merchant_name is provided
+    if (create_rule && merchant_name) {
+      createOrUpdateCategoryRule(merchant_name, user_category);
+
+      // Apply this rule to all other matching transactions
+      rulesApplied = applyCategoriesToMatchingTransactions(merchant_name, user_category);
+      console.log(`Created rule: ${merchant_name} -> ${user_category}, applied to ${rulesApplied} other transactions`);
+    }
 
     const updated = getTransaction(id);
 
@@ -151,6 +165,8 @@ export async function PATCH(request: NextRequest) {
             effective_category: getEffectiveCategory(updated.user_category, updated.plaid_category),
           }
         : null,
+      rule_created: create_rule && !!merchant_name,
+      rules_applied: rulesApplied,
     });
   } catch (error) {
     console.error('Error updating transaction:', error);

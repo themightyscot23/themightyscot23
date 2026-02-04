@@ -3,27 +3,30 @@
 import { useState } from 'react';
 import { Transaction, AppCategory, Account } from '@/lib/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatPlaidCategory } from '@/lib/categories';
 import { CategoryBadge, CategorySelect } from './CategorySelect';
 
 interface TransactionRowProps {
   transaction: Transaction & { effective_category: AppCategory };
-  onCategoryChange?: (id: string, category: AppCategory) => void;
+  onCategoryChange?: (id: string, category: AppCategory, merchantName: string | null) => void;
   showAccount?: boolean;
   account?: Account;
+  showPlaidCategory?: boolean;
 }
 
-export function TransactionRow({ transaction, onCategoryChange, showAccount, account }: TransactionRowProps) {
+export function TransactionRow({ transaction, onCategoryChange, showAccount, account, showPlaidCategory = true }: TransactionRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isIncome = transaction.amount < 0;
   const displayAmount = Math.abs(transaction.amount);
   const displayName = transaction.merchant_name || transaction.name || 'Unknown';
+  const plaidCategoryDisplay = formatPlaidCategory(transaction.plaid_category);
 
   const handleCategoryChange = async (category: AppCategory) => {
     setSaving(true);
     try {
-      await onCategoryChange?.(transaction.id, category);
+      await onCategoryChange?.(transaction.id, category, transaction.merchant_name || transaction.name);
     } finally {
       setSaving(false);
       setIsEditing(false);
@@ -57,18 +60,25 @@ export function TransactionRow({ transaction, onCategoryChange, showAccount, acc
       )}
 
       <td className="px-4 py-3">
-        {isEditing ? (
-          <CategorySelect
-            value={transaction.effective_category}
-            onChange={handleCategoryChange}
-            className={saving ? 'opacity-50' : ''}
-          />
-        ) : (
-          <CategoryBadge
-            category={transaction.effective_category}
-            onClick={() => setIsEditing(true)}
-          />
-        )}
+        <div className="space-y-1">
+          {isEditing ? (
+            <CategorySelect
+              value={transaction.effective_category}
+              onChange={handleCategoryChange}
+              className={saving ? 'opacity-50' : ''}
+            />
+          ) : (
+            <CategoryBadge
+              category={transaction.effective_category}
+              onClick={() => setIsEditing(true)}
+            />
+          )}
+          {showPlaidCategory && !isEditing && (
+            <p className="text-xs text-gray-400" title="Plaid category">
+              {plaidCategoryDisplay}
+            </p>
+          )}
+        </div>
       </td>
 
       <td
@@ -84,18 +94,19 @@ export function TransactionRow({ transaction, onCategoryChange, showAccount, acc
 }
 
 // Mobile card version
-export function TransactionCard({ transaction, onCategoryChange, showAccount, account }: TransactionRowProps) {
+export function TransactionCard({ transaction, onCategoryChange, showAccount, account, showPlaidCategory = true }: TransactionRowProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isIncome = transaction.amount < 0;
   const displayAmount = Math.abs(transaction.amount);
   const displayName = transaction.merchant_name || transaction.name || 'Unknown';
+  const plaidCategoryDisplay = formatPlaidCategory(transaction.plaid_category);
 
   const handleCategoryChange = async (category: AppCategory) => {
     setSaving(true);
     try {
-      await onCategoryChange?.(transaction.id, category);
+      await onCategoryChange?.(transaction.id, category, transaction.merchant_name || transaction.name);
     } finally {
       setSaving(false);
       setIsEditing(false);
@@ -131,7 +142,7 @@ export function TransactionCard({ transaction, onCategoryChange, showAccount, ac
         </p>
       </div>
 
-      <div>
+      <div className="space-y-1">
         {isEditing ? (
           <CategorySelect
             value={transaction.effective_category}
@@ -143,6 +154,11 @@ export function TransactionCard({ transaction, onCategoryChange, showAccount, ac
             category={transaction.effective_category}
             onClick={() => setIsEditing(true)}
           />
+        )}
+        {showPlaidCategory && !isEditing && (
+          <p className="text-xs text-gray-400" title="Plaid category">
+            {plaidCategoryDisplay}
+          </p>
         )}
       </div>
     </div>

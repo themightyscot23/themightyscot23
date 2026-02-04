@@ -273,6 +273,55 @@ export function getEffectiveCategory(
 }
 
 /**
+ * Format Plaid category for display
+ * Converts the stored JSON to a human-readable string
+ */
+export function formatPlaidCategory(plaidCategory: string | null): string {
+  if (!plaidCategory) return 'Uncategorized';
+
+  try {
+    const parsed = JSON.parse(plaidCategory);
+
+    // New format: { primary: "FOOD_AND_DRINK", detailed: "FOOD_AND_DRINK_GROCERIES" }
+    if (parsed && typeof parsed === 'object' && 'primary' in parsed) {
+      const { primary, detailed } = parsed;
+
+      // Format the detailed category nicely
+      if (detailed) {
+        // Convert FOOD_AND_DRINK_GROCERIES to "Groceries"
+        const parts = detailed.split('_');
+        // Find the index where the primary ends
+        const primaryParts = primary.split('_');
+        const detailParts = parts.slice(primaryParts.length);
+        if (detailParts.length > 0) {
+          return detailParts
+            .map((p: string) => p.charAt(0) + p.slice(1).toLowerCase())
+            .join(' ');
+        }
+      }
+
+      // Fall back to formatting primary
+      if (primary) {
+        return primary
+          .split('_')
+          .map((p: string) => p.charAt(0) + p.slice(1).toLowerCase())
+          .join(' ');
+      }
+    }
+
+    // Legacy format: ["Food and Drink", "Restaurants", "Fast Food"]
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      // Return the most specific category (last in array)
+      return parsed[parsed.length - 1];
+    }
+
+    return 'Uncategorized';
+  } catch {
+    return 'Uncategorized';
+  }
+}
+
+/**
  * Category colors for visualizations
  */
 export const CATEGORY_COLORS: Record<AppCategory, string> = {
