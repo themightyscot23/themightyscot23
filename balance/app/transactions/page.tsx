@@ -52,11 +52,11 @@ export default function TransactionsPage() {
     }
   }, [selectedMonths]);
 
-  const handleCategoryChange = async (id: string, category: AppCategory) => {
+  const handleCategoryChange = async (id: string, category: AppCategory, merchantName: string | null) => {
     await fetch('/api/transactions', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, user_category: category }),
+      body: JSON.stringify({ id, user_category: category, merchant_name: merchantName }),
     });
     await fetchTransactions();
   };
