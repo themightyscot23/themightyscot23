@@ -55,12 +55,12 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           {/* Header with B logo and tagline in styled banner */}
           <div className="mb-6">
-            <div className="bg-gradient-to-r from-[#006f4e]/8 via-[#00956a]/6 to-[#006f4e]/4 rounded-xl p-4">
+            <div className="bg-gradient-to-r from-[#006f4e] via-[#00875e] to-[#00956a] rounded-xl p-4">
               <div className="flex items-center gap-5">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#006f4e] to-[#00956a] rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-bold text-xl">B</span>
                 </div>
-                <p className="text-gray-700 text-base font-medium leading-relaxed">
+                <p className="text-white text-base font-medium leading-relaxed">
                   Join users who are tracking their finances with Balance
                 </p>
               </div>
