@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { plaidClient } from '@/lib/plaid';
+import { getPlaidClient } from '@/lib/plaid';
 import {
   getAllPlaidItems,
   getPlaidItem,
@@ -12,6 +12,7 @@ import { RemovedTransaction, Transaction } from 'plaid';
 
 export async function POST(request: NextRequest) {
   try {
+    const plaidClient = getPlaidClient();
     const body = await request.json().catch(() => ({}));
     const itemId = body.item_id;
 

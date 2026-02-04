@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { plaidClient, PLAID_PRODUCTS, PLAID_COUNTRY_CODES } from '@/lib/plaid';
+import { getPlaidClient, PLAID_PRODUCTS, PLAID_COUNTRY_CODES } from '@/lib/plaid';
 
 export async function POST() {
   try {
+    const plaidClient = getPlaidClient();
     const response = await plaidClient.linkTokenCreate({
       user: {
         client_user_id: 'user-id', // Single user app, static ID

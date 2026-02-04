@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { plaidClient } from '@/lib/plaid';
+import { getPlaidClient } from '@/lib/plaid';
 import { createPlaidItem, createAccount } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
+    const plaidClient = getPlaidClient();
     const { public_token, metadata } = await request.json();
 
     if (!public_token) {
