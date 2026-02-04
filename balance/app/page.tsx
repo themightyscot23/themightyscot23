@@ -326,13 +326,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <TransactionList
-          transactions={filteredTransactions}
-          onCategoryChange={handleCategoryChange}
-          loading={loading}
-          showAccount={true}
-          accounts={accounts}
-        />
+        <div className="max-h-[600px] overflow-y-auto">
+          <TransactionList
+            transactions={filteredTransactions}
+            onCategoryChange={handleCategoryChange}
+            loading={loading}
+            showAccount={true}
+            accounts={accounts}
+          />
+        </div>
       </div>
     </div>
   );
