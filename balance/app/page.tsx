@@ -211,7 +211,7 @@ export default function Dashboard() {
             </button>
           )}
         </div>
-        <div className="max-h-[600px] overflow-y-auto">
+        <div className="max-h-[calc(100vh-16rem)] overflow-y-auto">
           <TransactionList
             transactions={filteredTransactions}
             onCategoryChange={handleCategoryChange}
